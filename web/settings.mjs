@@ -1,4 +1,4 @@
-import { Repository, addTopic, ACTIONS_URL } from './repository.mjs';
+import { Repository, addTopic, ACTIONS_URL } from './repository.mjs?v=20261121-native-fetch';
 import { ModelSettings, TOKEN_URL } from './model-config.mjs';
 
 const byId = (id) => document.getElementById(id);
@@ -150,9 +150,14 @@ byId('connectionForm').addEventListener('submit', (event) => {
   byId('repositoryToken').value = '';
   operation(async () => {
     message('正在验证仓库授权并读取配置…');
+    byId('connectionStatus').textContent = '正在向 GitHub 验证令牌并读取仓库…';
     const client = new Repository(token);
     try { snapshot = await client.connect(); }
-    catch (error) { client.disconnect(); throw error; }
+    catch (error) {
+      client.disconnect();
+      byId('connectionStatus').textContent = `连接失败：${error.message}`;
+      throw error;
+    }
     repository = client;
     showInterests(snapshot.config.topics);
     byId('connectionForm').hidden = true;

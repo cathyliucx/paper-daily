@@ -67,7 +67,9 @@ export class Repository {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 20000);
     try {
-      const response = await this.#fetch(`https://api.github.com${path}`, {
+      // Browser native fetch rejects Repository as its receiver (Illegal invocation).
+      const fetchRequest = this.#fetch;
+      const response = await fetchRequest(`https://api.github.com${path}`, {
         method, cache: 'no-store', credentials: 'omit', redirect: 'error', signal: controller.signal,
         headers: {
           Accept: 'application/vnd.github+json',
@@ -91,7 +93,9 @@ export class Repository {
       return response.status === 204 ? null : response.json();
     } catch (error) {
       if (error instanceof TypeError || error.name === 'AbortError') {
-        throw new Error('GitHub 网络连接失败或超时。写入结果可能尚未返回，请先查看仓库或任务记录，再重试。');
+        throw new Error(method === 'GET'
+          ? '无法读取 GitHub：网络连接失败或超时，请检查网络后重试。'
+          : 'GitHub 网络连接失败或超时。写入结果可能尚未返回，请先查看仓库或任务记录，再重试。');
       }
       throw error;
     } finally {

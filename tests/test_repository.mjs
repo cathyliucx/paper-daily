@@ -105,3 +105,17 @@ test('concurrent dispatches are reported as ambiguous instead of claiming anothe
   ] }));
   await assert.rejects(repo.findRun({ afterId: 40, sha: 'head' }), /多个/);
 });
+
+test('invoke fetch as a standalone function, compatible with browser Window brand checks', async () => {
+  const repo = new Repository('fixture-token', function (url) {
+    assert.equal(this, undefined, 'Browser native fetch must not receive Repository as its receiver');
+    return Promise.resolve(response({sha: 'blob',content: encoded(original)}));
+  });
+  const result = await repo.loadConfig();
+  assert.deepEqual(result.config, original);
+});
+
+test('a failed read does not falsely warn that a write may have occurred', async () => {
+  const repo = new Repository('fixture-token', () => { throw new TypeError('Failed to fetch'); });
+  await assert.rejects(repo.loadConfig(), error => /读取/.test(error.message) && !/写入结果/.test(error.message));
+});
