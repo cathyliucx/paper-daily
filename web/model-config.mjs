@@ -20,7 +20,7 @@ export function validateModel({ baseUrl, model, apiKey }) {
 }
 
 export async function sealModel(profile, publicKey) {
-  // Loaded only while saving; both audited upstream builds are served locally.
+  // Loaded only while saving; both official upstream builds are served locally.
   const { default: sodium } = await import('./vendor/libsodium/libsodium-wrappers.mjs');
   await sodium.ready;
   const bytes = sodium.from_string(JSON.stringify(profile));

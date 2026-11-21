@@ -62,7 +62,7 @@ https://Futuresxy.github.io/paper-daily/
 GitHub Pages 是静态网站，仓库写入和触发 Actions 需要你自己的 GitHub 授权：
 
 1. 在 GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens 创建一个令牌，仅选择 `cathyliucx/paper-daily` 仓库。
-2. Repository permissions 中将 **Contents** 和 **Actions** 设为 **Read and write**，Metadata 保持 Read-only。
+2. Repository permissions 中将 **Contents**、**Actions**、**Secrets**、**Variables** 设为 **Read and write**，Metadata 保持 Read-only。令牌仅选择本仓库，有效期建议30天。
 3. 在页面设置中粘贴令牌，点击「连接仓库」。令牌只在当前页面内存中保存，刷新或断开连接后清除，不写入浏览器存储或仓库。不要发送到聊天中。
 
 **添加兴趣：** 在「研究兴趣」填写名称、长段研究描述和英文关键词（逗号或换行分隔）。可选的「必要概念组」每行一组，组内为“或”、组间为“且”，用于避免概念混淆。最多10个兴趣。点击「保存兴趣并更新论文」会追加到 `config/interests.json`，保留原有兴趣与来源，并启动最近7天的采集。页面会检查重复名称及并发编辑。如果兴趣已保存但任务提交失败，会明确提示，并可单独重试采集，不重复添加兴趣。
@@ -72,6 +72,18 @@ GitHub Pages 是静态网站，仓库写入和触发 Actions 需要你自己的 
 页面会显示排队、运行中、成功或失败，并链接到对应任务。任务成功后点击「刷新论文」读取新数据。状态检查遇到网络错误或超过15分钟会暂停，可点击「继续检查任务」；不能把任务已提交当作发布成功。刷新页面后可到「查看任务记录」继续查看，已经提交的任务不会被取消。无需令牌也可以正常浏览论文。
 
 仍可使用 GitHub Actions 的 `Run workflow` 手动运行（`clear_cache=true` 清缓存）。网页配置对应仓库文件；若启用了旧式 `Research Interests` Issue 配置，请先关闭该配置 Issue，避免覆盖文件中的兴趣。本仓库目前关闭了 Issues。
+
+## 页面上的模型配置
+
+点击顶部「模型配置」，连接 GitHub 授权后填写服务商、HTTPS 基础地址、模型 ID 和模型 API 密钥。默认提供 DeepSeek，也支持自定义 OpenAI 兼容接口。点击「保存模型配置」后，下次采集使用新配置；保存本身不会调用收费模型，也不会自动采集或清缓存。页面显示「已保存」和「已配置」，不会把它们误报成「模型连接成功」。
+
+模型接口、模型 ID 和密钥在浏览器中使用官方 libsodium 密封加密，作为一个版本化 JSON 配置写入 `LLM_API_KEY` Actions Secret。整个运行配置一次保存，避免部分更新时把旧密钥发送到新地址。已有纯文本 `LLM_API_KEY`、`DEEPSEEK_API_KEY`、`OPENAI_API_KEY` 仍兼容；版本化配置优先于旧的 `LLM_BASE_URL` / `LLM_MODEL` 变量。`LLM_PROFILE` Actions 变量仅记录不含密钥的显示信息，写入失败会单独报告，不影响已经保存的运行配置。
+
+GitHub 不会返回已保存密钥的内容，页面不会回显。修改模型配置时须重新输入模型密钥，留空不会覆盖。浏览器不保存 GitHub 令牌或模型密钥，关闭配置窗口会清空未提交的模型密钥输入；刷新或断开会清除 GitHub 连接。
+
+**分享权限：** 分享网站链接不会携带 GitHub 令牌，访客不能凭链接改写仓库或查看模型密钥。不要分享管理令牌或已连接的浏览器会话。拿到管理令牌的人可使用它获准的仓库权限；能修改代码的人还可能通过代码滥用模型密钥，因此不能把管理权限当作普通浏览权限分享。
+
+GitHub 授权入口会预填账户、30天有效期和所需权限。创建时仍须将 Repository access 设为 Only select repositories，仅选 `paper-daily`。最终生成授权令牌由账号所有者在 GitHub 确认，不要把令牌粘贴到聊天中，也不要提交到代码库。
 
 ## 数据保存方式
 

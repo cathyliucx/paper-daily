@@ -1,4 +1,5 @@
 import { Repository, addTopic, ACTIONS_URL } from './repository.mjs';
+import { ModelSettings, TOKEN_URL } from './model-config.mjs';
 
 const byId = (id) => document.getElementById(id);
 const dialog = byId('settingsDialog');
@@ -9,6 +10,9 @@ let pendingDispatch = null;
 let watched = null;
 let pollTimer = null;
 let pollDeadline = 0;
+let activePane = 'interests';
+let modelLoaded = false;
+byId('createRepositoryToken').href = TOKEN_URL;
 
 function message(text, notice = false) {
   byId('settingsStatus').textContent = text;
@@ -25,6 +29,8 @@ function message(text, notice = false) {
 
 function controls() {
   byId('interestFields').disabled = !repository || busy || Boolean(watched) || Boolean(pendingDispatch) || (snapshot?.config.topics.length || 0) >= 10;
+  byId('modelFields').disabled = !repository || busy;
+  byId('reloadModel').disabled = !repository || busy;
   byId('cacheFields').disabled = !repository || busy || Boolean(watched) || Boolean(pendingDispatch);
   byId('connectionForm').querySelector('button').disabled = busy;
   byId('disconnectRepository').disabled = busy;
@@ -60,14 +66,17 @@ function showInterests(topics) {
 }
 
 async function showSettings(pane) {
-  byId('interestsPane').hidden = pane !== 'interests';
-  byId('cachePane').hidden = pane !== 'cache';
-  byId('settingsTitle').textContent = pane === 'cache' ? '清理缓存' : '研究兴趣';
+  activePane = pane;
+  for (const name of ['interests', 'model', 'cache']) byId(`${name}Pane`).hidden = pane !== name;
+  byId('settingsTitle').textContent = { interests: '研究兴趣', model: '模型配置', cache: '清理缓存' }[pane];
   for (const button of document.querySelectorAll('[data-settings-pane]')) {
     button.setAttribute('aria-pressed', String(button.dataset.settingsPane === pane));
   }
   if (!dialog.open) dialog.showModal();
-  if (snapshot) return;
+  if (snapshot) {
+    if (pane === 'model' && !modelLoaded && !busy) await operation(loadModel);
+    return;
+  }
   try {
     const response = await fetch('./data/papers.json', { cache: 'no-store' });
     if (!response.ok) throw new Error();
@@ -75,7 +84,7 @@ async function showSettings(pane) {
     // A connection made during this public fetch takes precedence.
     if (!snapshot) {
       showInterests(data.topics || []);
-      message('以上为已发布的兴趣。连接后读取仓库最新配置，新增兴趣在保存后生效。');
+      message(`已读取${(data.topics || []).length}个已发布兴趣。连接仓库后可管理配置和采集任务。`);
     }
   } catch {
     if (!snapshot) message('暂时无法读取已发布兴趣。请连接仓库读取最新配置。');
@@ -149,7 +158,8 @@ byId('connectionForm').addEventListener('submit', (event) => {
     byId('connectionForm').hidden = true;
     byId('disconnectRepository').hidden = false;
     byId('connectionStatus').textContent = '已连接 cathyliucx/paper-daily · 当前页面有效';
-    message('已读取仓库最新兴趣。可以新增兴趣或清理论文缓存。');
+    message('已读取仓库最新兴趣，可以管理研究兴趣、模型和采集任务。');
+    if (activePane === 'model') await loadModel();
   });
 });
 
@@ -157,6 +167,9 @@ byId('disconnectRepository').addEventListener('click', () => {
   repository?.disconnect();
   repository = null;
   snapshot = null;
+  modelLoaded = false;
+  byId('modelApiKey').value = '';
+  byId('modelState').textContent = '已断开 GitHub 连接，模型密钥不会回显。';
   watched = null;
   pendingDispatch = null;
   clearTimeout(pollTimer);
@@ -191,6 +204,57 @@ byId('cacheForm').addEventListener('submit', (event) => {
     await dispatchPending();
   });
 });
+
+
+async function loadModel() {
+  byId('modelState').textContent = '正在读取密钥配置状态…';
+  try {
+    const state = await new ModelSettings(repository).load();
+    modelLoaded = true;
+    if (state.profile) {
+      byId('modelForm').elements.baseUrl.value = state.profile.base_url;
+      byId('modelForm').elements.model.value = state.profile.model;
+      byId('modelProvider').value = state.profile.base_url === 'https://api.deepseek.com/v1' ? 'deepseek' : 'custom';
+    }
+    byId('modelState').textContent = state.configured
+      ? '模型密钥已配置，无法读取其内容。下方为上次保存的配置记录；接口可用性需采集任务验证。'
+      : '尚未配置模型密钥；当前使用基础关键词模式。';
+    if (state.configured && !state.profile) byId('modelState').textContent = '已有密钥，但没有可回读的配置记录。请核对并重新输入完整配置，旧密钥不会回显。';
+  } catch (error) {
+    modelLoaded = false;
+    byId('modelState').textContent = `读取失败：${error.message}`;
+    throw error;
+  }
+}
+
+byId('modelForm').addEventListener('submit', (event) => {
+  event.preventDefault();
+  const values = Object.fromEntries(new FormData(event.currentTarget));
+  byId('modelApiKey').value = '';
+  operation(async () => {
+    try {
+      byId('modelState').textContent = '正在加密并保存模型配置…';
+      const result = await new ModelSettings(repository).save(values);
+      modelLoaded = true;
+      const status = result.metadataSaved
+        ? '模型配置已加密保存，下次采集生效。模型接口尚未经实际调用验证。'
+        : '模型配置已加密保存并可用于下次采集，但显示信息保存失败。请检查 Variables 写入权限；已保存的密钥无需重传。';
+      byId('modelState').textContent = status;
+      message(status);
+    } catch (error) {
+      byId('modelState').textContent = `保存未确认：${error.message}`;
+      throw error;
+    } finally { values.apiKey = ''; }
+  });
+});
+byId('reloadModel').addEventListener('click', () => operation(loadModel));
+byId('modelProvider').addEventListener('change', (event) => {
+  if (event.target.value === 'deepseek') {
+    byId('modelForm').elements.baseUrl.value = 'https://api.deepseek.com/v1';
+    byId('modelForm').elements.model.value = 'deepseek-chat';
+  }
+});
+dialog.addEventListener('close', () => { byId('modelApiKey').value = ''; });
 
 byId('retryDispatch').addEventListener('click', () => operation(dispatchPending));
 byId('checkTask').addEventListener('click', () => operation(async () => {
