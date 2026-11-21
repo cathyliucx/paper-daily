@@ -90,3 +90,18 @@ test('permission failures and rate limits cannot be reported as success or expos
     await assert.rejects(repo.dispatch(true), (error) => /HTTP/.test(error.message) && !error.message.includes('test-token'));
   }
 });
+
+test('disconnect prevents further requests and public-only tokens cannot connect as editors', async () => {
+  const repo = new Repository('token', async () => response({ permissions: { push: false } }));
+  await assert.rejects(repo.connect(), /写入权限/);
+  repo.disconnect();
+  await assert.rejects(repo.loadConfig(), /先连接/);
+});
+
+test('concurrent dispatches are reported as ambiguous instead of claiming another task succeeded', async () => {
+  const repo = new Repository('token', async () => response({ workflow_runs: [
+    { id: 41, event: 'workflow_dispatch', head_sha: 'head' },
+    { id: 42, event: 'workflow_dispatch', head_sha: 'head' },
+  ] }));
+  await assert.rejects(repo.findRun({ afterId: 40, sha: 'head' }), /多个/);
+});

@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Paper Daily</title>
-    <link rel="stylesheet" href="./styles.css?v=20260530-split-sources" />
+    <link rel="stylesheet" href="./styles.css?v=20261121-settings" />
   </head>
   <body>
     <header class="topbar">
@@ -30,12 +30,14 @@
             <span>护眼</span>
           </button>
         </div>
-        <a class="icon-link" href="https://github.com/cathyliucx/paper-daily/issues" target="_blank" rel="noreferrer" title="配置研究方向">⚙</a>
+        <button class="settings-button" type="button" data-settings-open="interests">研究兴趣</button>
+        <button class="settings-button" type="button" data-settings-open="cache">清理缓存</button>
         <a class="icon-link" href="https://github.com/cathyliucx/paper-daily/actions" target="_blank" rel="noreferrer" title="查看更新任务">↻</a>
       </nav>
     </header>
 
     <main class="shell">
+      <div id="taskNotice" class="task-notice" role="status" hidden></div>
       <section class="overview" aria-label="概览">
         <div class="overview-title">
           <p>Research Radar</p>
@@ -159,6 +161,86 @@
       </article>
     </template>
 
+    <dialog id="settingsDialog" aria-labelledby="settingsTitle">
+      <div class="settings-heading">
+        <h2 id="settingsTitle">研究兴趣</h2>
+        <button class="settings-button" id="closeSettings" type="button">关闭</button>
+      </div>
+      <div class="settings-tabs" aria-label="设置类别">
+        <button class="settings-button" type="button" data-settings-pane="interests" aria-pressed="true">研究兴趣</button>
+        <button class="settings-button" type="button" data-settings-pane="cache" aria-pressed="false">清理缓存</button>
+      </div>
+      <section class="repository-connection" aria-label="GitHub 仓库授权">
+        <p id="connectionStatus">连接仓库后，可保存研究兴趣并运行采集。</p>
+        <form id="connectionForm" autocomplete="off">
+          <details>
+            <summary>如何取得仓库授权令牌？</summary>
+            <p>在 GitHub 创建 Fine-grained token，仅选择 cathyliucx/paper-daily 仓库，将 Contents 和 Actions 设为 Read and write。Metadata 保持 Read-only。</p>
+            <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noreferrer">前往 GitHub 创建令牌 ↗</a>
+          </details>
+          <label class="settings-field" for="repositoryToken">GitHub 授权令牌</label>
+          <div class="connection-controls">
+            <input id="repositoryToken" type="password" required autocomplete="off" spellcheck="false" placeholder="仅在当前页面内存中使用" />
+            <button class="settings-button primary" type="submit">连接仓库</button>
+          </div>
+          <small>令牌不写入仓库或浏览器存储；刷新或断开连接后清除。请勿在聊天中发送令牌。</small>
+        </form>
+        <button id="disconnectRepository" class="settings-button" type="button" hidden>断开连接</button>
+      </section>
+      <section id="interestsPane">
+        <h3>已配置兴趣 <span id="interestCount"></span></h3>
+        <ul id="interestList" class="interest-list"></ul>
+        <form id="interestForm">
+          <fieldset id="interestFields" disabled>
+            <legend>添加研究兴趣</legend>
+            <label class="settings-field">兴趣名称
+              <input name="name" required maxlength="100" placeholder="例如：因果强化学习" />
+            </label>
+            <label class="settings-field">具体研究描述
+              <textarea name="description" required maxlength="10000" rows="4" placeholder="说明研究问题、关注的方法，以及哪些内容不属于这个兴趣。"></textarea>
+            </label>
+            <label class="settings-field">英文关键词
+              <textarea name="keywords" required rows="3" placeholder="causal reinforcement learning, causal policy learning"></textarea>
+              <small>逗号或换行分隔；前8个用于检索，其余参与匹配。</small>
+            </label>
+            <details>
+              <summary>精确检索设置（可选）</summary>
+              <label class="settings-field">必要概念组
+                <textarea name="groups" rows="3" placeholder="causal, counterfactual&#10;reinforcement learning, policy learning"></textarea>
+                <small>每行一组，组内逗号表示“或”，不同行之间为“且”。例如同时要求因果方法和强化学习。</small>
+              </label>
+              <label class="settings-field">arXiv 分类
+                <input name="categories" value="cs.AI, cs.LG" placeholder="cs.AI, cs.LG" />
+              </label>
+            </details>
+            <p class="settings-help">最多10个兴趣。保存到仓库后，自动按新配置采集最近7天的论文，保留现有论文缓存。</p>
+            <button class="settings-button primary" type="submit">保存兴趣并更新论文</button>
+          </fieldset>
+        </form>
+      </section>
+      <section id="cachePane" hidden>
+        <h3>清理论文缓存并重新采集</h3>
+        <p>忽略历史论文缓存，按当前研究兴趣重新检索最近7天的每日论文，并重建顶会论文列表。研究兴趣和模型配置不会被删除。</p>
+        <p class="settings-help">需要等待 GitHub 任务运行及发布。完成前保留现有页面；任务失败会显示原因，不会显示为清理成功。</p>
+        <form id="cacheForm">
+          <fieldset id="cacheFields" disabled>
+            <label class="cache-confirm"><input type="checkbox" required /> 我确认替换现有论文缓存并重新采集</label>
+            <button class="settings-button primary" type="submit">清理缓存并重新采集</button>
+          </fieldset>
+        </form>
+      </section>
+      <div class="settings-result" role="status" aria-live="polite">
+        <p id="settingsStatus">正在读取已发布的研究兴趣…</p>
+        <a id="settingsRunLink" href="https://github.com/cathyliucx/paper-daily/actions/workflows/paper-daily.yml" target="_blank" rel="noreferrer">查看任务记录 ↗</a>
+        <div class="settings-result-actions">
+          <button id="retryDispatch" class="settings-button" type="button" hidden>重试启动采集</button>
+          <button id="checkTask" class="settings-button" type="button" hidden>继续检查任务</button>
+          <button id="refreshPapers" class="settings-button" type="button" hidden>刷新论文</button>
+        </div>
+      </div>
+    </dialog>
+
     <script src="./app.js?v=20260530-split-sources"></script>
+    <script type="module" src="./settings.mjs?v=20261121-settings"></script>
   </body>
 </html>

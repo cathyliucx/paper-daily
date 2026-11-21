@@ -55,17 +55,23 @@ https://你的用户名.github.io/你的仓库名/
 https://Futuresxy.github.io/paper-daily/
 ```
 
-## 手动清空论文缓存
+## 在页面添加研究兴趣和清理缓存
 
-如果之前已经积累了很多低质量或缺少摘要的论文，可以手动清缓存重新跑一次：
+打开 [Paper Daily](https://cathyliucx.github.io/paper-daily/)，页面顶部有「研究兴趣」和「清理缓存」两个按钮。
 
-1. 打开仓库的 `Actions`。
-2. 进入左侧的 `Paper Daily` workflow。
-3. 点击右侧 `Run workflow`。
-4. 把 `clear_cache` 填成 `true`。
-5. 点击绿色的 `Run workflow` 按钮。
+GitHub Pages 是静态网站，仓库写入和触发 Actions 需要你自己的 GitHub 授权：
 
-这会让本次运行忽略 `web/data/papers.json` 和 `web/data/conference_papers.json` 里的历史论文，重新按当前 Issue 配置抓取。每日新论文默认最多新增和保留 50 篇，顶会精品单独保留，避免两类内容互相挤掉。
+1. 在 GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens 创建一个令牌，仅选择 `cathyliucx/paper-daily` 仓库。
+2. Repository permissions 中将 **Contents** 和 **Actions** 设为 **Read and write**，Metadata 保持 Read-only。
+3. 在页面设置中粘贴令牌，点击「连接仓库」。令牌只在当前页面内存中保存，刷新或断开连接后清除，不写入浏览器存储或仓库。不要发送到聊天中。
+
+**添加兴趣：** 在「研究兴趣」填写名称、长段研究描述和英文关键词（逗号或换行分隔）。可选的「必要概念组」每行一组，组内为“或”、组间为“且”，用于避免概念混淆。最多10个兴趣。点击「保存兴趣并更新论文」会追加到 `config/interests.json`，保留原有兴趣与来源，并启动最近7天的采集。页面会检查重复名称及并发编辑。如果兴趣已保存但任务提交失败，会明确提示，并可单独重试采集，不重复添加兴趣。
+
+**清理缓存：** 在「清理缓存」确认后点击「清理缓存并重新采集」，使用已有 workflow 的 `clear_cache=true` 重建最近7天的每日论文和顶会列表。这是忽略旧论文数据重新生成，不会删除兴趣或模型密钥，也不会删除全部 GitHub Actions 缓存条目。完成发布前，旧页面数据保持可见。
+
+页面会显示排队、运行中、成功或失败，并链接到对应任务。任务成功后点击「刷新论文」读取新数据。状态检查遇到网络错误或超过15分钟会暂停，可点击「继续检查任务」；不能把任务已提交当作发布成功。刷新页面后可到「查看任务记录」继续查看，已经提交的任务不会被取消。无需令牌也可以正常浏览论文。
+
+仍可使用 GitHub Actions 的 `Run workflow` 手动运行（`clear_cache=true` 清缓存）。网页配置对应仓库文件；若启用了旧式 `Research Interests` Issue 配置，请先关闭该配置 Issue，避免覆盖文件中的兴趣。本仓库目前关闭了 Issues。
 
 ## 数据保存方式
 
@@ -75,7 +81,7 @@ GitHub Actions 运行后不会再把 `web/data/*.json` commit 回 `main` 分支�
 
 ## 第 3 步：配置研究方向
 
-推荐用 Issue 配置，后续修改最方便。
+推荐使用上面的页面入口添加兴趣。需要批量修改时可直接编辑 `config/interests.json`。以下为仍兼容的旧式 Issue 配置方式（需仓库启用 Issues）：
 
 1. 打开仓库的 `Issues`。
 2. 点击 `New issue`。
