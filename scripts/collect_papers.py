@@ -1595,8 +1595,36 @@ def fallback_summary(paper: dict[str, Any], best_match: dict[str, Any]) -> dict[
     }
 
 
+def resolve_model_config() -> tuple[str, str, str]:
+    api_key = os.getenv("LLM_API_KEY") or os.getenv("OPENAI_API_KEY") or os.getenv("DEEPSEEK_API_KEY") or ""
+    if api_key.lstrip().startswith("{"):
+        try:
+            profile = json.loads(api_key)
+            base_url = profile["base_url"]
+            model = profile["model"]
+            key = profile["api_key"]
+            endpoint = urllib.parse.urlsplit(base_url)
+            if (
+                profile.get("format") != "paper-daily-model-v1"
+                or endpoint.scheme != "https"
+                or not endpoint.hostname
+                or endpoint.username or endpoint.password or endpoint.query or endpoint.fragment
+                or not isinstance(model, str) or not re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9_./:-]{0,127}", model)
+                or not isinstance(key, str) or not key or re.search(r"[\x00-\x20\x7f]", key)
+            ):
+                raise ValueError("invalid model profile")
+            return key, base_url.rstrip("/"), model
+        except (ValueError, KeyError, TypeError, AttributeError):
+            raise ValueError("LLM_API_KEY 中的模型配置无效，请在模型配置页面重新保存。") from None
+    base_url = os.getenv("LLM_BASE_URL", "")
+    if not base_url:
+        base_url = "https://api.deepseek.com/v1" if os.getenv("DEEPSEEK_API_KEY") else "https://api.openai.com/v1"
+    model = os.getenv("LLM_MODEL", "deepseek-chat" if os.getenv("DEEPSEEK_API_KEY") else "gpt-4o-mini")
+    return api_key, base_url, model
+
+
 def llm_enabled() -> bool:
-    return bool(os.getenv("LLM_API_KEY") or os.getenv("OPENAI_API_KEY") or os.getenv("DEEPSEEK_API_KEY"))
+    return bool(resolve_model_config()[0])
 
 
 def llm_headers(api_key: str) -> dict[str, str]:
@@ -1608,11 +1636,7 @@ def llm_headers(api_key: str) -> dict[str, str]:
 
 
 def call_openai_compatible(prompt: str) -> dict[str, Any]:
-    api_key = os.getenv("LLM_API_KEY") or os.getenv("OPENAI_API_KEY") or os.getenv("DEEPSEEK_API_KEY") or ""
-    base_url = os.getenv("LLM_BASE_URL", "")
-    if not base_url:
-        base_url = "https://api.deepseek.com/v1" if os.getenv("DEEPSEEK_API_KEY") else "https://api.openai.com/v1"
-    model = os.getenv("LLM_MODEL", "deepseek-chat" if os.getenv("DEEPSEEK_API_KEY") else "gpt-4o-mini")
+    api_key, base_url, model = resolve_model_config()
     endpoint = base_url.rstrip("/") + "/chat/completions"
     payload = {
         "model": model,

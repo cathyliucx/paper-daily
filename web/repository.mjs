@@ -80,7 +80,7 @@ export class Repository {
       if (!response.ok) {
         const messages = {
           401: '授权令牌无效或已过期，请重新连接。',
-          403: '请求被拒绝：请检查 Contents / Actions 写入权限，或稍后等待限流解除。',
+          403: '请求被拒绝：请检查当前操作所需的 Contents / Actions / Secrets / Variables 权限，或等待限流解除。',
           404: '无法访问仓库或工作流，请检查令牌选中的仓库及权限。',
           409: '配置已被修改。请重新连接读取最新配置后重试。',
           422: 'GitHub 未接受请求，请检查配置或工作流状态。',

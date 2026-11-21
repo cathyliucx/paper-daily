@@ -1,0 +1,1 @@
+Official libsodium.js ESM builds from npm (ISC licence). Versions and SHA-256 hashes are in manifest.json. Both licence files are included. The wrapper has one packaging-only change: its bare libsodium import points to ./libsodium.mjs. No cryptographic code is modified. Self-hosted; no runtime CDN requests. Upstream: https://github.com/jedisct1/libsodium.js
