@@ -27,3 +27,26 @@ class InterestGroupTests(unittest.TestCase):
             # The causal example must not smuggle the excluded policy term into the test itself.
             if topic_id=='causal_reinforcement_learning':paper['summary']='A causal discovery method for multivariate time series and nonstationarity.'
             self.assertFalse(is_relevant_enough(paper,score_paper(topic,paper)),topic_id)
+
+    def test_application_domain_is_required_even_for_method_match(self):
+        from scripts.collect_papers import build_llm_prompt
+        config={'application_domains':[{'id':'finance','name':'金融','keywords':['financial','trading']}, {'id':'emotion','name':'情绪','keywords':['emotion','sentiment']}, {'id':'scientific_discovery','name':'科学发现','keywords':['scientific discovery']}], 'topics':[{'id':'causal_rl','name':'因果强化学习','keywords':['causal reinforcement learning'],'required_keyword_groups':[['causal'],['reinforcement learning']]}]}
+        topic=parse_topics(config)[0]
+        for domain in ['financial trading', 'emotion recognition', 'scientific discovery']:
+            p={'title':'Causal reinforcement learning for '+domain,'summary':'We evaluate a causal reinforcement learning method for '+domain+'.'}
+            self.assertTrue(is_relevant_enough(p,score_paper(topic,p)),domain)
+        p={'title':'Causal reinforcement learning for robot locomotion','summary':'Experiments evaluate policies on robot control benchmarks.'}
+        self.assertFalse(is_relevant_enough(p,score_paper(topic,p)))
+        self.assertIn('application_domain',build_llm_prompt(topic,p,score_paper(topic,p)))
+        self.assertIn('不能',build_llm_prompt(topic,p,score_paper(topic,p)))
+
+    def test_model_cannot_pass_an_unverified_application_domain(self):
+        from unittest.mock import patch
+        from scripts.collect_papers import summarize_with_llm
+        topic=parse_topics({'application_domains':[{'id':'finance','name':'金融','keywords':['financial']}], 'topics':[{'id':'t','name':'方法','keywords':['causal']} ]})[0]
+        p={'title':'Financial causal inference','summary':'A financial causal method evaluated on real markets.'}
+        base=score_paper(topic,p)
+        for answer in [{'match_level':'high','application_domain':'other','domain_evidence':'Financial'}, {'match_level':'high','application_domain':'finance','domain_evidence':'invented financial evidence'}, {'match_level':'high'}]:
+            with patch('scripts.collect_papers.llm_enabled',return_value=True), patch('scripts.collect_papers.call_openai_compatible',return_value=answer):
+                _,match=summarize_with_llm(topic,p,base)
+            self.assertEqual(match['level'],'low')

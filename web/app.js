@@ -405,6 +405,9 @@ async function main() {
     updateUpdatedAt(`数据读取失败：${error.message}`);
   }
 
+  for (const data of Object.values(state.datasets)) {
+    data.papers = (data.papers || []).filter(paper => ["high", "medium"].includes(levelOf(paper)));
+  }
   updateUpdatedAt();
   hydrateTopicFilter();
   hydrateDateFilter();

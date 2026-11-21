@@ -475,7 +475,7 @@ class RetentionTest(unittest.TestCase):
         self.assertTrue(should_summarize_paper_with_llm({"source_type": "conference", "summary": "DBLP 题录。"}))
         self.assertTrue(should_summarize_paper_with_llm({"source": "Crossref", "summary": ""}))
 
-    def test_merge_retains_previous_high_medium_and_recent_low(self) -> None:
+    def test_merge_deletes_new_and_cached_low_even_when_recent(self) -> None:
         now = dt.datetime(2026, 5, 28, tzinfo=dt.timezone.utc)
         stale_low = paper("old-low", "low", "2026-03-01T00:00:00+00:00")
         stale_low["first_seen_at"] = "2026-03-02T00:00:00+00:00"
@@ -496,18 +496,25 @@ class RetentionTest(unittest.TestCase):
             recent_history_days=45,
         )
 
-        self.assertEqual({item["id"] for item in merged}, {"new-low", "old-high", "old-medium", "recent-low"})
-        self.assertEqual(stats["retained_paper_count"], 3)
-        self.assertEqual(stats["retained_recent_low_count"], 1)
-        self.assertEqual(stats["dropped_low_relevance_count"], 1)
+        self.assertEqual({item["id"] for item in merged}, {"old-high", "old-medium"})
+        self.assertEqual(stats["retained_paper_count"], 2)
+        self.assertEqual(stats["retained_recent_low_count"], 0)
+        self.assertEqual(stats["dropped_low_relevance_count"], 3)
         self.assertTrue(next(item for item in merged if item["id"] == "old-high")["retained_from_previous_run"])
+
+    def test_fresh_rejection_cannot_resurrect_a_previous_accepted_paper(self):
+        now = dt.datetime(2026, 5, 28, tzinfo=dt.timezone.utc)
+        merged, _ = merge_with_retained_papers(
+            [paper("same", "low", now.isoformat())],
+            {"papers": [paper("same", "high", now.isoformat())]}, now, 45)
+        self.assertEqual(merged, [])
 
     def test_merge_retains_only_active_conference_years(self) -> None:
         now = dt.datetime(2026, 5, 28, tzinfo=dt.timezone.utc)
-        active = paper("isca-2025", "low", "2025-01-01T00:00:00+00:00")
+        active = paper("isca-2025", "medium", "2025-01-01T00:00:00+00:00")
         active["source_type"] = "conference"
         active["conference"] = {"id": "isca", "year": 2025}
-        stale = paper("isca-2024", "low", "2024-01-01T00:00:00+00:00")
+        stale = paper("isca-2024", "medium", "2024-01-01T00:00:00+00:00")
         stale["source_type"] = "conference"
         stale["conference"] = {"id": "isca", "year": 2024}
         existing = {

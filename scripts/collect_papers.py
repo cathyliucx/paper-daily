@@ -54,6 +54,7 @@ class Topic:
     keywords: list[str]
     arxiv_categories: list[str]
     required_keyword_groups: tuple[tuple[str, ...], ...] = ()
+    application_domains: tuple[dict[str, Any], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -129,6 +130,7 @@ def parse_topics(config: dict[str, Any]) -> list[Topic]:
                 keywords=[str(k) for k in item.get("keywords", [])],
                 arxiv_categories=[str(c) for c in item.get("arxiv_categories", [])],
                 required_keyword_groups=tuple(tuple(str(k) for k in group) for group in item.get("required_keyword_groups", []) if group),
+                application_domains=tuple(config.get("application_domains", [])),
             )
         )
     if not topics:
@@ -330,6 +332,9 @@ def arxiv_query_for_topic(topic: Topic) -> str:
         groups = ["(" + " OR ".join('all:"' + term.replace('"', '\\"') + '"' for term in group) + ")" for group in topic.required_keyword_groups]
         if keyword_terms:
             groups.insert(0, "(" + " OR ".join(keyword_terms) + ")")
+        if topic.application_domains:
+            terms = [term for domain in topic.application_domains for term in domain["keywords"]]
+            groups.append("(" + " OR ".join('all:"' + term.replace('"', '\\"') + '"' for term in terms) + ")")
         return " AND ".join(groups)
 
     category_terms = [f"cat:{category}" for category in topic.arxiv_categories[:5]]
@@ -1436,8 +1441,21 @@ def match_level(score: float) -> str:
     return "low"
 
 
+def application_domain_matches(topic: Topic, paper: dict[str, Any]) -> list[dict[str, str]]:
+    # Only original title/abstract count; generated relevance or transfer claims never count.
+    text = normalize_space(f"{paper.get('title', '')} {paper.get('summary', '')}").lower()
+    return [
+        {"id": domain["id"], "name": domain["name"], "keyword": term}
+        for domain in topic.application_domains
+        for term in domain["keywords"]
+        if re.search(r"(?<!\w)" + re.escape(term.lower()) + r"(?!\w)", text)
+    ]
+
+
 def score_paper(topic: Topic, paper: dict[str, Any]) -> dict[str, Any]:
     text = f"{paper.get('title', '')} {paper.get('summary', '')}".lower()
+    if topic.application_domains and not application_domain_matches(topic, paper):
+        return {"topic_id": topic.id, "topic_name": topic.name, "score": 0.0, "level": "low", "reason": "原文未体现所选应用领域。", "keyword_hits": [], "required_groups_met": False}
     for group in topic.required_keyword_groups:
         if not any(re.search(r"(?<!\w)" + re.escape(term.lower()) + r"(?!\w)", text) for term in group):
             return {"topic_id": topic.id, "topic_name": topic.name, "score": 0.0, "level": "low", "reason": "缺少该方向必须同时具备的主题关键词组。", "keyword_hits": [], "required_groups_met": False}
@@ -1676,6 +1694,8 @@ def build_llm_prompt(topic: Topic, paper: dict[str, Any], base_match: dict[str, 
 名称：{topic.name}
 描述：{topic.description}
 关键词：{", ".join(topic.keywords)}
+应用领域限制：{json.dumps(list(topic.application_domains), ensure_ascii=False) if topic.application_domains else "未设置"}
+若设置领域限制：必须先判断论文实际研究、实验或任务是否属于其中一个领域，不能因为方法可迁移、背景提及或设想未来用于金融/情绪/科学发现就通过。通用算法、机器人控制、医疗诊断、普通视觉/语言基准均不能自动归入科学发现。科学发现需有假设生成、实验设计或验证、新科学知识发现等明确科研任务。情绪需为情绪、情感或情感分析任务，不是RL奖励。引用原文连续短句作为 domain_evidence；不属于、证据不足或仅迁移猜测时 application_domain=other 且 match_level=low。
 
 论文信息：
 标题：{paper.get("title", "")}
@@ -1696,6 +1716,8 @@ arXiv 分类：{", ".join(paper.get("categories", []))}
   "evidence": "摘要中可核验的实验、理论或系统证据；没有则写证据不足",
   "limitations": "可能局限或需要阅读全文确认的点",
   "why_relevant": "为什么匹配我的研究方向",
+  "application_domain": "领域ID或other（未设限制时为other）",
+  "domain_evidence": "标题或摘要中的原文连续片段",
   "match_score_adjustment": 0.0,
   "match_level": "high|medium|low"
 }}
@@ -1730,6 +1752,17 @@ def summarize_with_llm(topic: Topic, paper: dict[str, Any], base_match: dict[str
     adjusted_match["score"] = round(adjusted_score, 3)
     adjusted_match["level"] = adjusted_level
     adjusted_match["llm_reason"] = summary["why_relevant"]
+    if topic.application_domains:
+        domain = str(data.get("application_domain") or "other")
+        evidence = normalize_space(str(data.get("domain_evidence") or ""))
+        original = normalize_space(f"{paper.get('title', '')} {paper.get('summary', '')}")
+        matched_domains = {item["id"] for item in application_domain_matches(topic, paper)}
+        if domain not in matched_domains or len(evidence) < 12 or evidence.lower() not in original.lower():
+            adjusted_match["level"] = "low"
+            adjusted_match["llm_reason"] = "应用领域未通过原文证据校验。"
+        else:
+            adjusted_match["application_domain"] = domain
+            adjusted_match["domain_evidence"] = evidence
     return summary, adjusted_match
 
 
@@ -1851,31 +1884,24 @@ def merge_with_retained_papers(
         key = paper_key(paper)
         if not key:
             continue
-        seen_at = parse_datetime(str(paper.get("first_seen_at") or paper.get("last_seen_at") or existing_generated_at))
-        is_recent = bool(
-            recent_history_days > 0
-            and seen_at
-            and (now.date() - seen_at.date()).days <= recent_history_days
-        )
-        is_active_conference = (
-            should_retain_conference_paper(paper, active_conference_years_by_source)
-            and is_relevant_enough(paper, paper.get("best_match") or {})
-        )
-        if paper.get("source_type") == "conference" and active_conference_years_by_source is not None and not is_active_conference:
+        if best_match_level(paper) not in RETAINED_MATCH_LEVELS:
             dropped_low += 1
             continue
-        if best_match_level(paper) in RETAINED_MATCH_LEVELS or is_recent or is_active_conference:
-            retained_by_key[key] = paper
-            if is_recent and best_match_level(paper) not in RETAINED_MATCH_LEVELS:
-                retained_recent += 1
-        else:
-            dropped_low += 1
+        if paper.get("source_type") == "conference" and active_conference_years_by_source is not None:
+            if not should_retain_conference_paper(paper, active_conference_years_by_source):
+                dropped_low += 1
+                continue
+        retained_by_key[key] = paper
 
     merged = []
     seen = set()
     now_iso = now.isoformat()
     for paper in current_papers:
         key = paper_key(paper)
+        if best_match_level(paper) not in RETAINED_MATCH_LEVELS:
+            retained_by_key.pop(key, None)  # A fresh rejection also supersedes an old accepted record.
+            dropped_low += 1
+            continue
         previous = retained_by_key.get(key)
         if previous:
             paper.setdefault("first_seen_at", previous.get("first_seen_at") or existing_generated_at)
@@ -1977,6 +2003,16 @@ def collect(
         existing_conference_payload = stored_conference_payload
     else:
         existing_conference_payload = migrated_conference_payload
+    for cached_payload in (existing_payload, existing_conference_payload):
+        cached_payload["papers"] = [
+            paper for paper in cached_payload.get("papers", [])
+            if isinstance(paper, dict) and any(
+                topic.id == (paper.get("best_match") or {}).get("topic_id")
+                and is_relevant_enough(paper, score_paper(topic, paper))
+                and (not topic.application_domains or (paper.get("best_match") or {}).get("application_domain") in {d["id"] for d in topic.application_domains})
+                for topic in topics
+            )
+        ]
     cached_conference_years_by_source = cached_conference_years(existing_conference_payload)
     cutoff, collection_mode = collection_cutoff(existing_payload, now, days, incremental_since_last_run)
     all_candidates = []
@@ -2201,6 +2237,10 @@ def collect(
             paper["matches"] = [adjusted_match if m["topic_id"] == adjusted_match["topic_id"] else m for m in paper["matches"]]
         else:
             paper["chinese_summary"] = fallback_summary(paper, paper["best_match"])
+        topic = next(t for t in topics if t.id == paper["best_match"]["topic_id"])
+        if topic.application_domains and not paper["best_match"].get("application_domain"):
+            paper["best_match"]["level"] = "low"
+            paper["best_match"]["reason"] = "应用领域尚无通过校验的模型评审，本次不收录。"
 
     daily_recent_papers = [paper for paper in recent_papers if paper.get("source_type") != "conference"]
     conference_recent_papers = [paper for paper in recent_papers if paper.get("source_type") == "conference"]
@@ -2261,7 +2301,7 @@ def collect(
         "stats": {
             **base_stats,
             "paper_count": len(daily_merged_papers),
-            "new_paper_count": len(daily_recent_papers),
+            "new_paper_count": sum(best_match_level(p) in RETAINED_MATCH_LEVELS for p in daily_recent_papers),
             **daily_retention_stats,
         },
     }
@@ -2283,7 +2323,7 @@ def collect(
         "stats": {
             **base_stats,
             "paper_count": len(conference_merged_papers),
-            "new_paper_count": len(conference_recent_papers),
+            "new_paper_count": sum(best_match_level(p) in RETAINED_MATCH_LEVELS for p in conference_recent_papers),
             **conference_retention_stats,
         },
     }
