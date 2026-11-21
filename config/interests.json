@@ -13,7 +13,7 @@
       {
         "id": "neurips",
         "name": "NeurIPS",
-        "group": "machine learning",
+        "group": "artificial intelligence and machine learning",
         "dblp_toc_patterns": [
           "db/conf/nips/nips{year}.bht"
         ]
@@ -21,7 +21,7 @@
       {
         "id": "icml",
         "name": "ICML",
-        "group": "machine learning",
+        "group": "artificial intelligence and machine learning",
         "dblp_toc_patterns": [
           "db/conf/icml/icml{year}.bht"
         ]
@@ -29,33 +29,17 @@
       {
         "id": "iclr",
         "name": "ICLR",
-        "group": "representation learning",
+        "group": "artificial intelligence and machine learning",
         "dblp_toc_patterns": [
           "db/conf/iclr/iclr{year}.bht"
         ]
       },
       {
-        "id": "uai",
-        "name": "UAI",
-        "group": "causality and uncertainty",
+        "id": "aaai",
+        "name": "AAAI",
+        "group": "artificial intelligence and machine learning",
         "dblp_toc_patterns": [
-          "db/conf/uai/uai{year}.bht"
-        ]
-      },
-      {
-        "id": "aistats",
-        "name": "AISTATS",
-        "group": "statistics and machine learning",
-        "dblp_toc_patterns": [
-          "db/conf/aistats/aistats{year}.bht"
-        ]
-      },
-      {
-        "id": "icaif",
-        "name": "ICAIF",
-        "group": "AI in finance",
-        "dblp_toc_patterns": [
-          "db/conf/icaif/icaif{year}.bht"
+          "db/conf/aaai/aaai{year}.bht"
         ]
       }
     ]

@@ -496,4 +496,4 @@ http://localhost:8000
 
 `required_keyword_groups` 要求每组至少命中一个词、各组同时满足，用于检索与本地筛选。因果RL必须同时包含因果与RL/策略学习词组；金融XAI同时要求金融和解释方法；多模态融合同时要求模态、OT/MoE和效率相关词。共享arXiv分类不再能单独使不满足必要词组的论文进入该方向。它是关键词预筛选，不能替代方法级的人工或模型审读。
 
-顶会来源改为NeurIPS、ICML、ICLR、UAI、AISTATS和ICAIF。首次更换兴趣应使用`clear_cache=true`重新生成，避免旧体系结构方向的数据被保留。
+顶会来源仅使用NeurIPS、ICML、ICLR和AAAI。首次更换兴趣应使用`clear_cache=true`重新生成，避免旧体系结构方向的数据被保留。
