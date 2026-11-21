@@ -3,7 +3,7 @@ const FORMAT = 'paper-daily-model-v1';
 export const TOKEN_URL = 'https://github.com/settings/personal-access-tokens/new?' + new URLSearchParams({
   name: 'Paper Daily management', target_name: 'cathyliucx', expires_in: '30',
   description: 'Manage paper-daily interests, model secrets and collection tasks',
-  contents: 'write', actions: 'write', secrets: 'write', variables: 'write',
+  contents: 'write', actions: 'write', secrets: 'write', actions_variables: 'write',
 });
 
 export function validateModel({ baseUrl, model, apiKey }) {

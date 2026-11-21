@@ -83,6 +83,6 @@ test('token creation link requests only required repository permission types and
   assert.equal(url.hostname,'github.com');
   assert.equal(url.searchParams.get('target_name'),'cathyliucx');
   assert.equal(url.searchParams.get('expires_in'),'30');
-  for (const permission of ['contents','actions','secrets','variables']) assert.equal(url.searchParams.get(permission),'write');
+  for (const permission of ['contents','actions','secrets','actions_variables']) assert.equal(url.searchParams.get(permission),'write');
   assert.ok(!url.searchParams.has('administration'));
 });
