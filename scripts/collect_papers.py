@@ -53,6 +53,7 @@ class Topic:
     description: str
     keywords: list[str]
     arxiv_categories: list[str]
+    required_keyword_groups: tuple[tuple[str, ...], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -127,6 +128,7 @@ def parse_topics(config: dict[str, Any]) -> list[Topic]:
                 description=item.get("description", ""),
                 keywords=[str(k) for k in item.get("keywords", [])],
                 arxiv_categories=[str(c) for c in item.get("arxiv_categories", [])],
+                required_keyword_groups=tuple(tuple(str(k) for k in group) for group in item.get("required_keyword_groups", []) if group),
             )
         )
     if not topics:
@@ -323,6 +325,12 @@ def arxiv_query_for_topic(topic: Topic) -> str:
     for keyword in topic.keywords[:8]:
         escaped = keyword.replace('"', '\\"')
         keyword_terms.append(f'all:"{escaped}"')
+
+    if topic.required_keyword_groups:
+        groups = ["(" + " OR ".join('all:"' + term.replace('"', '\\"') + '"' for term in group) + ")" for group in topic.required_keyword_groups]
+        if keyword_terms:
+            groups.insert(0, "(" + " OR ".join(keyword_terms) + ")")
+        return " AND ".join(groups)
 
     category_terms = [f"cat:{category}" for category in topic.arxiv_categories[:5]]
     query_mode = os.getenv("ARXIV_QUERY_MODE", "keyword").strip().lower()
@@ -1429,6 +1437,10 @@ def match_level(score: float) -> str:
 
 
 def score_paper(topic: Topic, paper: dict[str, Any]) -> dict[str, Any]:
+    text = f"{paper.get('title', '')} {paper.get('summary', '')}".lower()
+    for group in topic.required_keyword_groups:
+        if not any(re.search(r"(?<!\w)" + re.escape(term.lower()) + r"(?!\w)", text) for term in group):
+            return {"topic_id": topic.id, "topic_name": topic.name, "score": 0.0, "level": "low", "reason": "缺少该方向必须同时具备的主题关键词组。", "keyword_hits": [], "required_groups_met": False}
     k_score, hits = keyword_score(topic, paper)
     c_score = category_score(topic, paper)
     l_score = lexical_overlap_score(topic, paper)
@@ -1475,6 +1487,8 @@ def has_meaningful_summary(paper: dict[str, Any], min_chars: int = 80) -> bool:
 
 
 def is_relevant_enough(paper: dict[str, Any], best_match: dict[str, Any]) -> bool:
+    if best_match.get("required_groups_met") is False:
+        return False
     if best_match.get("keyword_hits"):
         return True
 

@@ -481,3 +481,19 @@ python -m http.server 8000 --directory web
 ```text
 http://localhost:8000
 ```
+
+## 当前研究兴趣
+
+研究兴趣已替换为7个方向，方向名称保留中文，检索关键词采用英文组合词：
+
+- 自进化因子投资智能体：`agent verifier design`、`feedback stability`、`feedback reliability`。
+- RSI：`recursive self-improvement`、`meta-optimization`、`self-improving optimizer`。
+- 金融可解释AI：`financial interpretability`、`financial feature attribution`、`SHAP`。
+- 因果强化学习：`causal reinforcement learning`、`causal policy learning`、`causal off-policy evaluation`。
+- AI科学家：`AI Scientist`、`autonomous scientific discovery`、`scientific research agent`。
+- 合成数据：`synthetic financial data`、`financial time series generation`、`synthetic tabular data`。
+- 高效多模态融合：`multimodal optimal transport`、`multimodal mixture of experts`、`low-latency multimodal fusion`。
+
+`required_keyword_groups` 要求每组至少命中一个词、各组同时满足，用于检索与本地筛选。因果RL必须同时包含因果与RL/策略学习词组；金融XAI同时要求金融和解释方法；多模态融合同时要求模态、OT/MoE和效率相关词。共享arXiv分类不再能单独使不满足必要词组的论文进入该方向。它是关键词预筛选，不能替代方法级的人工或模型审读。
+
+顶会来源改为NeurIPS、ICML、ICLR、UAI、AISTATS和ICAIF。首次更换兴趣应使用`clear_cache=true`重新生成，避免旧体系结构方向的数据被保留。

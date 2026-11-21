@@ -1,366 +1,300 @@
 {
-  "generated_at": "Sat, 30 May 2026 06:19:13 +0000",
-  "generated_at_iso": "2026-05-30T06:19:13.607095+00:00",
+  "generated_at": "2026-11-21T09:06:59.679890+00:00",
+  "generated_at_iso": "2026-11-21T09:06:59.679935+00:00",
   "config_source": "issue",
   "data_kind": "daily",
   "topics": [
     {
-      "id": "llm_low_precision_quantization",
-      "name": "大模型低精度量化",
-      "description": "关注大语言模型低比特量化、混合精度、量化感知训练、后训练量化、权重量化、激活量化、KV cache 量化以及量化对推理性能和精度的影响。",
+      "id": "agent_verification_feedback",
+      "name": "自进化因子投资智能体：验证器与反馈稳定性",
+      "description": "我关注自进化因子投资智能体：本兴趣仅聚焦验证器设计与环境反馈稳定性，研究智能体用于因子假设生成、表达式构造、回测、筛选和迭代时，如何可靠判断一次因子、策略或研究流程更新是否真正有效，并让后续自进化建立在稳定且可信的反馈之上。重点追踪验证器的构造、校准、组合与独立验证，以及环境反馈的噪声、稀疏性、延迟、非平稳性、评估偏差和奖励投机，关注验证器与被评估智能体共同适应后出现的反馈失真、过拟合或自我强化错误。\n\n特别强调自进化因子投资中的样本外与滚动验证、市场状态变化、金融数据泄漏、多重检验和反复回测的选择偏差，以及交易成本对反馈有效性的影响。优先寻找可复用的验证、反馈去噪、稳定性诊断和更新接受/拒绝机制；跨领域方法需说明其验证器或反馈机制如何适配因子研究闭环。仅以验证器设计或反馈稳定性为方法核心的研究才匹配本兴趣，普通记忆、规划、工具使用或协作改进不能只因带有“自进化智能体”标签而被收纳。",
       "keywords": [
-        "large language model quantization",
-        "LLM quantization",
-        "low-bit quantization",
-        "post-training quantization",
-        "weight-only quantization",
-        "activation quantization",
-        "mixed precision",
-        "FP8",
-        "INT4",
-        "INT8",
-        "KV cache quantization"
+        "agent verifier design",
+        "agent verification",
+        "feedback stability",
+        "feedback reliability",
+        "reward hacking",
+        "reward model calibration",
+        "verifiable agent self-improvement",
+        "update acceptance mechanism",
+        "noisy environment feedback",
+        "factor investing agent verification"
+      ],
+      "required_keyword_groups": [
+        [
+          "agent",
+          "self-evolving",
+          "self-improving",
+          "reinforcement learning"
+        ],
+        [
+          "verifier",
+          "verification",
+          "feedback stability",
+          "feedback reliability",
+          "reward hacking",
+          "reward model calibration",
+          "noisy feedback",
+          "update acceptance"
+        ]
       ],
       "arxiv_categories": [
-        "cs.CL",
+        "cs.AI",
+        "cs.LG",
+        "q-fin.CP"
+      ]
+    },
+    {
+      "id": "recursive_self_improvement",
+      "name": "RSI：递归自我改进",
+      "description": "我关注 RSI（Recursive Self-Improvement，递归自我改进）：系统如何持续改进自身用于提出、选择、评估和执行改进的方法，使后续改进能力本身增强，而不只提升某一轮任务的结果。重点追踪能够修改自身优化器、搜索策略、学习规则、研究流程、工具或代码的递归机制，以及自指优化、元学习、改进算法的自动设计和对改进机制的再次优化。\n\n评审应说清被更新的对象、更新依据、反馈来源，以及为何该变化能够影响下一轮改进的质量或效率。关注多轮递归收益是否持续、改进能否迁移、验证与接受机制、退化和错误累积、计算与时间成本、独立基线及消融证据，区分任务表现提升和改进机制本身变强。优先有可检验递归过程的方法与范式；仅用固定优化器反复调整提示词、执行静态自反思或普通重试，不能单凭“self-improvement”标签视为 RSI。",
+      "keywords": [
+        "recursive self-improvement",
+        "recursive self improvement",
+        "self-referential optimization",
+        "meta-optimization",
+        "self-improving optimizer",
+        "optimizer self-evolution",
+        "self-modifying improvement algorithm",
+        "automated algorithm discovery"
+      ],
+      "required_keyword_groups": [
+        [
+          "recursive self-improvement",
+          "recursive self improvement",
+          "self-referential",
+          "self-modifying",
+          "self-improving optimizer",
+          "meta-optimization",
+          "optimizer self-evolution"
+        ],
+        [
+          "optimizer",
+          "optimization algorithm",
+          "improvement mechanism",
+          "improvement algorithm",
+          "search strategy",
+          "learning rule",
+          "improvement process",
+          "research workflow",
+          "algorithm discovery"
+        ]
+      ],
+      "arxiv_categories": [
+        "cs.AI",
+        "cs.LG"
+      ]
+    },
+    {
+      "id": "financial_explainable_ai",
+      "name": "金融可解释人工智能",
+      "description": "我关注金融可解释人工智能（Explainable AI / XAI）在股票、传统期货与加密货币现货及永续合约中的方法创新，覆盖中低频的日频、多日与小时级收益预测、因子挖掘、组合配置和风险管理，以及高频的逐笔、事件级与秒级限价订单簿（limit order book / LOB）、订单流、价格冲击、做市与交易执行。重点寻找适合金融时序依赖、特征相关性、非平稳性和市场状态切换的解释方法，包括时序 SHAP、条件归因、反事实解释、内生可解释模型、符号或参数模型提炼，以及 Transformer / Mamba 状态空间金融基础模型的机制可解释性（mechanistic interpretability）、表征探测和内部干预。我希望理解模型究竟利用了什么经济或微观结构信息，解释能否跨股票、跨品种、跨市场及跨频率迁移，并探索用解释发现稳健因子、简化策略、识别伪相关、诊断漂移和改进风控的模块或范式。优先关注解释忠实性、稳定性、时序一致性及可干预验证，区分模型内部干预证据与真实市场因果结论、语言理由与真实决策依据；结合滚动样本外检验、数据泄漏与过拟合控制，以及费用、滑点、延迟、换手和极端行情下的经济价值验证。论文需与上述具体问题有明确方法联系和可迁移模块；优先可核验开源代码，无代码时仅接受已核实的知名机构与具名研究者例外，明确标注复现状态。",
+      "keywords": [
+        "explainable financial prediction",
+        "financial interpretability",
+        "stock prediction explanation",
+        "financial feature attribution",
+        "SHAP",
+        "counterfactual explanation",
+        "mechanistic interpretability",
+        "interpretable trading",
+        "temporal feature attribution",
+        "explainable limit order book"
+      ],
+      "required_keyword_groups": [
+        [
+          "financial",
+          "finance",
+          "stock",
+          "trading",
+          "portfolio",
+          "futures",
+          "cryptocurrency",
+          "limit order book"
+        ],
+        [
+          "explainable",
+          "interpretable",
+          "interpretability",
+          "SHAP",
+          "attribution",
+          "counterfactual explanation"
+        ]
+      ],
+      "arxiv_categories": [
+        "q-fin.ST",
+        "q-fin.CP",
+        "cs.LG",
+        "stat.ML"
+      ]
+    },
+    {
+      "id": "causal_reinforcement_learning",
+      "name": "因果强化学习",
+      "description": "我关注因果强化学习（Causal Reinforcement Learning）：如何将因果发现、结构因果模型、因果表示学习、干预与反事实推理融入强化学习和序贯决策，以提高样本效率、策略可解释性、离线策略评估的可信度，以及在分布变化和环境变化下的泛化能力。我希望追踪能够区分相关性与因果作用、处理混杂因素、利用因果结构进行探索和策略优化的方法，关注其识别假设、实验或观测证据、基线比较与失效条件；也关注可迁移到自进化智能体、因子研究和投资决策流程的模块或范式，但不要求论文已经完成金融场景验证。",
+      "keywords": [
+        "causal reinforcement learning",
+        "causal RL",
+        "counterfactual reinforcement learning",
+        "causal policy learning",
+        "causal policy optimization",
+        "causal off-policy evaluation",
+        "causal Markov decision process",
+        "confounded reinforcement learning",
+        "causal model-based reinforcement learning"
+      ],
+      "required_keyword_groups": [
+        [
+          "causal",
+          "causality",
+          "structural causal",
+          "intervention",
+          "counterfactual"
+        ],
+        [
+          "reinforcement learning",
+          "RL",
+          "policy learning",
+          "policy optimization",
+          "policy evaluation",
+          "Markov decision process"
+        ]
+      ],
+      "arxiv_categories": [
         "cs.LG",
         "cs.AI",
-        "cs.DC"
+        "stat.ML"
       ]
     },
     {
-      "id": "tensor_compute_unit_architecture",
-      "name": "张量计算单元结构",
-      "description": "关注 GPU/NPU/TPU 张量计算单元、矩阵乘加阵列、数据流架构、片上存储层次、低精度张量核、AI 加速器微架构和算子映射。",
+      "id": "ai_scientist",
+      "name": "AI 科学家",
+      "description": "我关注 AI 科学家（AI Scientist / autonomous scientific discovery）的持续进展，重点追踪 Sakana AI 的 The AI Scientist 系列及其他能够完成科研闭环的自主研究系统：从文献理解、研究问题与假设生成，到实验设计、代码实现、实验执行、数据分析、结论验证和下一轮研究迭代。我希望理解这些系统如何利用实验反馈修正假设与研究计划、积累可复用的科研经验，并比较不同的搜索、规划、工具使用、多智能体协作、记忆和自进化机制。\n\n优先关注有实证评估、可核验代码或可信来源的方法，考察科学有效性、新颖性、结果可复现性、负面结果与失败分析、评价偏差、人类介入程度以及计算和时间成本。也追踪科研代理基准、自动评审与证据核验、开放式科学发现和真实科研任务上的能力边界，提取可复用的科研模块与范式，而不只关注论文写作或展示性演示。",
       "keywords": [
-        "tensor processing unit",
-        "tensor core",
-        "matrix multiply unit",
-        "systolic array",
-        "AI accelerator architecture",
-        "NPU architecture",
-        "GPU tensor core",
-        "low precision tensor compute",
-        "dataflow architecture",
-        "on-chip memory hierarchy"
+        "AI Scientist",
+        "autonomous scientific discovery",
+        "automated scientific discovery",
+        "autonomous research agent",
+        "scientific research agent",
+        "agentic science",
+        "AI-driven scientific discovery",
+        "closed-loop scientific discovery",
+        "The AI Scientist"
+      ],
+      "required_keyword_groups": [
+        [
+          "AI scientist",
+          "scientific discovery",
+          "scientific agent",
+          "scientific research",
+          "autonomous research",
+          "agentic science"
+        ],
+        [
+          "hypothesis",
+          "hypotheses",
+          "experiment",
+          "research workflow",
+          "scientific verification",
+          "scientific discovery",
+          "research agent"
+        ]
       ],
       "arxiv_categories": [
-        "cs.AR",
-        "cs.DC",
-        "cs.LG",
-        "cs.PF"
-      ]
-    },
-    {
-      "id": "llm_inference_cluster_communication",
-      "name": "大模型推理集群通信优化",
-      "description": "关注分布式大模型推理、prefill/decode 分离、张量并行、流水并行、专家并行、跨节点通信、调度、负载均衡和 serving 系统吞吐延迟优化。",
-      "keywords": [
-        "LLM inference serving",
-        "distributed inference",
-        "inference cluster",
-        "tensor parallelism",
-        "pipeline parallelism",
-        "expert parallelism",
-        "all-reduce",
-        "collective communication",
-        "prefill decode disaggregation",
-        "serving scheduler"
-      ],
-      "arxiv_categories": [
-        "cs.DC",
-        "cs.PF",
-        "cs.CL",
+        "cs.AI",
         "cs.LG"
       ]
     },
     {
-      "id": "kvcache_compression_storage_scheduling",
-      "name": "KV cache 压缩与存储调度",
-      "description": "关注大模型推理中的 KV cache 压缩、淘汰、分页、卸载、预取、层级存储、显存管理和长上下文推理效率优化。",
+      "id": "synthetic_financial_data",
+      "name": "合成数据：金融领域优先",
+      "description": "我关注合成数据（Synthetic Data / Data Synthesis）的方法，尤其是金融领域的合成数据：如何利用生成模型、仿真与基于智能体的建模，生成有用且可控的多变量金融时间序列、收益率与波动率、行情和限价订单簿、订单流与交易行为、信用或欺诈样本，以及金融文本和情景数据。我希望追踪扩散模型、流匹配、GAN、VAE、自回归与大语言模型生成、混合仿真等方法，关注条件生成、稀缺事件与尾部风险、市场状态切换、数据增强和压力测试，寻找可复用的生成、约束、校准和评估模块。\n\n金融方法优先，同时接受有清楚迁移路径的通用时序、表格和文本合成方法。重点考察合成数据能否保留厚尾、波动聚集、时序与跨资产依赖、微观结构和合理的金融约束，以及能否在真实未见数据上的预测、因子研究、风险管理或策略训练中带来实际帮助；区分分布相似、下游效用与真实经济价值。关注与真实数据训练及现有生成方法的对比、样本外与跨市场泛化、数据泄漏和训练样本记忆，以及隐私保护、差分隐私和隐私—效用权衡。论文未完成金融验证时可以提出待验证的适配方案，不要求已经满足全部金融评估；沿用现有方法相关性、可迁移性和代码来源筛选规则。",
       "keywords": [
-        "KV cache compression",
-        "KV cache eviction",
-        "KV cache scheduling",
-        "paged attention",
-        "attention cache",
-        "long context inference",
-        "memory offloading",
-        "GPU memory management",
-        "cache prefetching",
-        "LLM serving memory"
+        "synthetic financial data",
+        "financial time series generation",
+        "synthetic time series",
+        "synthetic tabular data",
+        "data synthesis",
+        "synthetic data generation",
+        "limit order book generation",
+        "financial market simulation",
+        "privacy-preserving synthetic data",
+        "diffusion time series generation"
+      ],
+      "required_keyword_groups": [
+        [
+          "synthetic data",
+          "data synthesis",
+          "data generation",
+          "synthetic time series",
+          "synthetic financial",
+          "time series generation",
+          "tabular data generation",
+          "order book generation",
+          "market simulation"
+        ]
       ],
       "arxiv_categories": [
-        "cs.CL",
         "cs.LG",
-        "cs.DC",
-        "cs.PF"
+        "stat.ML",
+        "q-fin.ST",
+        "q-fin.CP"
       ]
-    }
-  ],
-  "papers": [
+    },
     {
-      "id": "2605.28803v1",
-      "source": "arXiv",
-      "title": "Ω-QVLA: Robust Quantization for Vision-Language-Action Models via Composite Rotation and Per-step Scaling",
-      "authors": [
-        "Xinyu Wang",
-        "Mingze Li",
-        "Sicheng Lyu",
-        "Dongxiu Liu",
-        "Kaicheng Yang",
-        "Ziyu Zhao",
-        "Yufei Cui",
-        "Xiao-Wen Chang",
-        "Peng Lu"
+      "id": "efficient_multimodal_ot_moe",
+      "name": "多模态融合：OT、MoE与低时延",
+      "description": "我关注多模态融合：主要追踪最优传输距离（Optimal Transport / OT，如 Wasserstein、Sinkhorn、Gromov-Wasserstein 等）与混合专家模型（Mixture of Experts / MoE）结合的方法，重点是提高融合效率、降低推理时延和计算开销。希望理解 OT 如何用于跨模态分布对齐、token/特征匹配、专家分配或门控路由，并与稀疏专家激活、动态路由、token压缩和选择性跨模态交互结合，覆盖文本、视觉、音频以及时序/表格等模态。直接结合 OT 与 MoE 的方法优先，也关注能明确补足该组合的高效OT求解、轻量路由、稀疏融合或压缩模块。\n\n重点比较精度—效率权衡，考察融合模块与端到端的实际时延、吞吐、FLOPs、显存、通信开销和激活专家数；关注批大小、序列长度、硬件、求解迭代数和训练/推理阶段差异，并计入OT求解与专家路由自身的额外开销。优先具有同条件基线、消融或实测结果的研究，理解相较于稠密融合、常规MoE或单独OT对齐为何更高效；只有准确率提升、缺少OT/MoE联系或无法说明效率来源的工作优先级较低。可迁移模块尚缺端到端验证时应明确标为待验证，继续沿用现有方法相关性、可迁移性和代码来源规则。",
+      "keywords": [
+        "multimodal optimal transport",
+        "multimodal mixture of experts",
+        "cross-modal optimal transport",
+        "Wasserstein multimodal fusion",
+        "Sinkhorn multimodal",
+        "optimal transport routing",
+        "efficient multimodal fusion",
+        "sparse multimodal fusion",
+        "low-latency multimodal fusion"
       ],
-      "summary": "Vision-Language-Action (VLA) models unify perception, reasoning, and control within a single policy, yet their multi-billion-parameter backbones and diffusion-based action heads make on-device deployment prohibitively expensive. Prior quantization efforts offer only partial solutions, compressing the LLM backbone while leaving the DiT action head at full precision, or resorting to mixed-precision schemes, driven by the belief that uniformly quantizing the action head is inherently unstable. We challenge this assumption with Omega-QVLA, the first training-free post-training quantization framework that compresses both the language backbone and the entire diffusion action head of a VLA model to a uniform W4A4 precision, eliminating the need for mixed-precision allocation. Omega-QVLA combines a composite SVD-Hadamard rotation that equalizes per-channel weight energy while diffusing residual activation outliers with per-step DiT activation scaling quantization that absorbs dynamic-range drift across denoising steps. On LIBERO, Omega-QVLA compresses Pi 0.5 and GR00T N1.5 to W4A4 with 98.0% and 87.8% task success rates, matching or exceeding their FP16 references of 97.1% and 87.0%, while reducing the static memory footprint by 71.3%. Real-world manipulation experiments further confirm smooth, accurate manipulation where prior methods fail. Code is available at https://github.com/UCMP13753/Omega-QVLA.",
-      "published": "2026-05-27T17:55:01Z",
-      "updated": "2026-05-27T17:55:01Z",
-      "paper_url": "http://arxiv.org/abs/2605.28803v1",
-      "pdf_url": "https://arxiv.org/pdf/2605.28803v1",
-      "categories": [
+      "required_keyword_groups": [
+        [
+          "multimodal",
+          "multi-modal",
+          "cross-modal",
+          "vision-language"
+        ],
+        [
+          "optimal transport",
+          "Wasserstein",
+          "Sinkhorn",
+          "Gromov-Wasserstein",
+          "mixture of experts",
+          "mixture-of-experts",
+          "MoE"
+        ],
+        [
+          "efficient",
+          "efficiency",
+          "latency",
+          "sparse",
+          "sparsity",
+          "routing",
+          "compression",
+          "throughput",
+          "FLOPs"
+        ]
+      ],
+      "arxiv_categories": [
         "cs.CV",
-        "cs.LG"
-      ],
-      "seed_topic": "llm_low_precision_quantization",
-      "matches": [
-        {
-          "topic_id": "llm_low_precision_quantization",
-          "topic_name": "大模型低精度量化",
-          "score": 0.853,
-          "level": "high",
-          "reason": "关键词命中：post-training quantization；arXiv 分类重合：cs.LG",
-          "keyword_hits": [
-            "post-training quantization"
-          ],
-          "llm_reason": "论文涉及大模型后训练量化，旨在实现低比特（W4A4）权重量化和激活量化，与我的研究方向“大模型低精度量化”高度吻合，特别是该方法在LLM和扩散模型上的均匀量化技术对研究有直接参考价值。"
-        },
-        {
-          "topic_id": "tensor_compute_unit_architecture",
-          "topic_name": "张量计算单元结构",
-          "score": 0.156,
-          "level": "low",
-          "reason": "arXiv 分类重合：cs.LG",
-          "keyword_hits": []
-        },
-        {
-          "topic_id": "kvcache_compression_storage_scheduling",
-          "topic_name": "KV cache 压缩与存储调度",
-          "score": 0.125,
-          "level": "low",
-          "reason": "arXiv 分类重合：cs.LG",
-          "keyword_hits": []
-        },
-        {
-          "topic_id": "llm_inference_cluster_communication",
-          "topic_name": "大模型推理集群通信优化",
-          "score": 0.094,
-          "level": "low",
-          "reason": "arXiv 分类重合：cs.LG",
-          "keyword_hits": []
-        }
-      ],
-      "best_match": {
-        "topic_id": "llm_low_precision_quantization",
-        "topic_name": "大模型低精度量化",
-        "score": 0.853,
-        "level": "high",
-        "reason": "关键词命中：post-training quantization；arXiv 分类重合：cs.LG",
-        "keyword_hits": [
-          "post-training quantization"
-        ],
-        "llm_reason": "论文涉及大模型后训练量化，旨在实现低比特（W4A4）权重量化和激活量化，与我的研究方向“大模型低精度量化”高度吻合，特别是该方法在LLM和扩散模型上的均匀量化技术对研究有直接参考价值。"
-      },
-      "chinese_summary": {
-        "problem": "现有VLA模型量化方法大多只压缩LLM主干而保持DiT动作头全精度，或采用混合精度，因为认为均匀量化动作头不稳定，导致无法实现模型整体的低比特均匀量化，阻碍端侧部署。",
-        "method": "提出训练免费的后训练量化方法Ω-QVLA，结合复合SVD-Hadamard旋转均衡每通道权重能量并扩散激活异常值，以及逐步DiT激活缩放量化技术吸收去噪步骤间的动态范围漂移，实现对LLM主干和扩散动作头的统一W4A4量化。",
-        "innovation": "1) 首次对VLA模型实现无需训练的W4A4统一量化，打破扩散动作头无法均匀量化的假设；2) 提出复合SVD-Hadamard旋转，同时解决权重量化困难和激活异常值问题；3) 设计逐步DiT激活缩放量化方法，无需混合精度即可处理去噪过程中激活的动态范围变化。",
-        "evidence": "在LIBERO基准上，Ω-QVLA将Pi 0.5和GR00T N1.5压缩至W4A4，任务成功率分别达98.0%和87.8%，匹配或超过FP16基准的97.1%和87.0%，静态内存占用减少71.3%；真实世界操作实验验证了平滑准确的操作，优于先前方法。",
-        "limitations": "摘要未提及除LIBERO外的泛化性，量化仅针对特定VLA模型架构，逐步缩放对更长去噪步骤的适应性需进一步验证，未讨论量化对推理延迟的影响。",
-        "why_relevant": "论文涉及大模型后训练量化，旨在实现低比特（W4A4）权重量化和激活量化，与我的研究方向“大模型低精度量化”高度吻合，特别是该方法在LLM和扩散模型上的均匀量化技术对研究有直接参考价值。"
-      },
-      "first_seen_at": "2026-05-28T09:35:48.728882+00:00",
-      "last_seen_at": "2026-05-28T13:18:49.361053+00:00",
-      "retained_from_previous_run": true
+        "cs.LG",
+        "cs.AI",
+        "cs.MM"
+      ]
     }
   ],
+  "papers": [],
   "stats": {
-    "candidate_paper_count": 34,
-    "daily_candidate_paper_count": 0,
-    "conference_candidate_paper_count": 34,
-    "filtered_low_relevance_count": 0,
-    "days": 1,
-    "collection_mode": "lookback",
-    "collection_cutoff_iso": "2026-05-29T06:19:13.607095+00:00",
-    "max_per_topic": 10,
-    "max_new_papers": 50,
-    "max_new_conference_papers": 50,
-    "sources": [
-      {
-        "type": "arxiv",
-        "name": "arXiv",
-        "url": "",
-        "enabled": true,
-        "headers_env": "",
-        "bearer_token_env": ""
-      }
-    ],
-    "conference_sources": [
-      {
-        "id": "isca",
-        "name": "ISCA",
-        "group": "computer architecture",
-        "dblp_toc_patterns": [
-          "db/conf/isca/isca{year}.bht"
-        ],
-        "years": [
-          2026,
-          2025
-        ],
-        "enabled": true
-      },
-      {
-        "id": "micro",
-        "name": "MICRO",
-        "group": "computer architecture",
-        "dblp_toc_patterns": [
-          "db/conf/micro/micro{year}.bht"
-        ],
-        "years": [
-          2026,
-          2025
-        ],
-        "enabled": true
-      },
-      {
-        "id": "hpca",
-        "name": "HPCA",
-        "group": "computer architecture",
-        "dblp_toc_patterns": [
-          "db/conf/hpca/hpca{year}.bht"
-        ],
-        "years": [
-          2026,
-          2025
-        ],
-        "enabled": true
-      },
-      {
-        "id": "asplos",
-        "name": "ASPLOS",
-        "group": "computer architecture",
-        "dblp_toc_patterns": [
-          "db/conf/asplos/asplos{year}-1.bht",
-          "db/conf/asplos/asplos{year}-2.bht",
-          "db/conf/asplos/asplos{year}-3.bht",
-          "db/conf/asplos/asplos{year}-4.bht"
-        ],
-        "years": [
-          2026,
-          2025
-        ],
-        "enabled": true
-      },
-      {
-        "id": "mlsys",
-        "name": "MLSys",
-        "group": "systems for machine learning",
-        "dblp_toc_patterns": [
-          "db/conf/mlsys/mlsys{year}.bht"
-        ],
-        "years": [
-          2026,
-          2025
-        ],
-        "enabled": true
-      },
-      {
-        "id": "eurosys",
-        "name": "EuroSys",
-        "group": "systems",
-        "dblp_toc_patterns": [
-          "db/conf/eurosys/eurosys{year}.bht"
-        ],
-        "years": [
-          2026,
-          2025
-        ],
-        "enabled": true
-      }
-    ],
-    "source_stats": {
-      "arXiv": {
-        "type": "arxiv",
-        "successful_fetches": 4,
-        "failed_fetches": 0
-      },
-      "ISCA": {
-        "type": "conference",
-        "successful_fetches": 1,
-        "failed_fetches": 0,
-        "skipped_cached_years": 1
-      },
-      "MICRO": {
-        "type": "conference",
-        "successful_fetches": 1,
-        "failed_fetches": 0,
-        "skipped_cached_years": 1
-      },
-      "HPCA": {
-        "type": "conference",
-        "successful_fetches": 0,
-        "failed_fetches": 0,
-        "skipped_cached_years": 2
-      },
-      "ASPLOS": {
-        "type": "conference",
-        "successful_fetches": 0,
-        "failed_fetches": 0,
-        "skipped_cached_years": 2
-      },
-      "MLSys": {
-        "type": "conference",
-        "successful_fetches": 1,
-        "failed_fetches": 0,
-        "skipped_cached_years": 1
-      },
-      "EuroSys": {
-        "type": "conference",
-        "successful_fetches": 0,
-        "failed_fetches": 0,
-        "skipped_cached_years": 2
-      }
-    },
-    "llm_enabled": true,
-    "llm_concurrency": 2,
-    "recent_history_days": 45,
-    "successful_fetches": 7,
-    "failed_fetches": 0,
-    "successful_conference_fetches": 3,
-    "failed_conference_fetches": 0,
-    "skipped_cached_conference_years": 9,
-    "conference_source_count": 6,
-    "cached_conference_candidate_count": 34,
-    "clear_cache": false,
-    "conference_arxiv_enrichment_attempted": 34,
-    "conference_arxiv_enrichment_succeeded": 15,
-    "conference_arxiv_enrichment_skipped": 0,
-    "conference_arxiv_enrichment_last_error": "",
-    "paper_count": 1,
-    "new_paper_count": 0,
-    "retained_paper_count": 1,
-    "retained_recent_low_count": 0,
-    "dropped_low_relevance_count": 0,
-    "max_stored_papers": 50,
-    "max_data_bytes": 8388608,
-    "data_bytes": 13757,
-    "storage_trimmed_count": 0,
-    "storage_trimmed_by_level": {
-      "high": 0,
-      "medium": 0,
-      "low": 0,
-      "unknown": 0
-    }
+    "paper_count": 0,
+    "configuration_reset": true
   }
 }
