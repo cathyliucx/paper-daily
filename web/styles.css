@@ -738,3 +738,12 @@ select:focus,
   #settingsDialog { padding: 18px; }
   .connection-controls { align-items: stretch; flex-direction: column; }
 }
+.connection-controls .settings-button { flex: 0 0 auto; white-space: nowrap; }
+#settingsDialog input[type="checkbox"] {
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  min-height: 20px;
+  margin: 3px 0 0;
+  padding: 0;
+}
