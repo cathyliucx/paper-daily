@@ -801,12 +801,12 @@ def enrich_conference_paper_from_candidate(
 ) -> bool:
     if not has_meaningful_summary(candidate):
         return False
-    source = abstract_source or str(candidate.get("source") or "external")
+    source = abstract_source or str(candidate.get("abstract_source") or candidate.get("source") or "external")
     paper["summary"] = candidate["summary"]
     paper["abstract_source"] = source
     paper["enriched"] = True
     paper["abstract_source_id"] = candidate.get("id", "")
-    paper["abstract_source_url"] = candidate.get("paper_url", "")
+    paper["abstract_source_url"] = candidate.get("abstract_source_url") or candidate.get("paper_url", "")
     if source.lower() == "arxiv":
         paper["arxiv_id"] = candidate.get("id", "")
         paper["arxiv_url"] = candidate.get("paper_url", "")
@@ -2086,7 +2086,6 @@ def collect(
                 for topic in topics
             )
         ]
-    cached_conference_years_by_source = cached_conference_years(existing_conference_payload)
     cutoff, collection_mode = collection_cutoff(existing_payload, now, days, incremental_since_last_run)
     all_candidates = []
     successful_fetches = 0
@@ -2174,7 +2173,7 @@ def collect(
             years=years_to_fetch,
             enabled=source.enabled,
         )
-        print(f"Fetching DBLP conference papers for source: {source.name} {', '.join(str(year) for year in years_to_fetch)}", flush=True)
+        print(f"Fetching official conference catalogs (DBLP fallback) for source: {source.name} {', '.join(str(year) for year in years_to_fetch)}", flush=True)
         try:
             source_papers, diagnostics = fetch_conference_catalog(source_to_fetch, topics, max_per_conference)
             source_stats[source.name].update(diagnostics)
@@ -2339,6 +2338,7 @@ def collect(
         "raw_daily_candidate_count": raw_daily_candidate_count,
         "raw_conference_candidate_count": len(conference_discovery),
         "conference_missing_abstract_count": sum(not has_meaningful_summary(p) for p in conference_discovery),
+        "conference_abstract_failed_count": conference_enrichment_stats.get("conference_abstract_enrichment_attempted", 0) - conference_enrichment_stats.get("conference_abstract_enrichment_succeeded", 0),
         "conference_filtered_count": len(conference_discovery) - conference_candidate_paper_count,
         "daily_outside_cutoff_count": daily_outside_cutoff_count,
         "daily_backfill_days": backfill_days,

@@ -213,7 +213,9 @@ function renderPaper(paper) {
   setText(node, ".match-reason", `${best.topic_name || "未分类"}：${best.reason || ""}`);
 
   const tags = node.querySelector(".paper-tags");
-  for (const category of (paper.categories || []).slice(0, 8)) {
+  const domainNames = {finance: "金融", emotion: "情绪", scientific_discovery: "科学发现"};
+  const domain = domainNames[best.application_domain];
+  for (const category of [domain, ...(paper.categories || [])].filter(Boolean).slice(0, 8)) {
     const tag = document.createElement("span");
     tag.className = "tag";
     tag.textContent = category;
@@ -391,7 +393,7 @@ function updateSourceDiagnostics() {
     for (const [year, detail] of failedYears) addLine(`${year}：${detail.error}`);
   }
   if (state.filters.collection === "conference") {
-    addLine(`兴趣线索候选 ${stats.raw_conference_candidate_count || 0} 篇；补摘要成功 ${stats.conference_abstract_enrichment_succeeded || 0} 篇；仍缺摘要 ${stats.conference_missing_abstract_count || 0} 篇；领域／方法预筛后 ${stats.conference_candidate_paper_count || 0} 篇；AI 已评审 ${stats.conference_llm_reviewed_count || 0} 篇；本次收录 ${stats.new_paper_count || 0} 篇。`);
+    addLine(`兴趣线索候选 ${stats.raw_conference_candidate_count || 0} 篇；补摘要成功 ${stats.conference_abstract_enrichment_succeeded || 0} 篇；摘要失败 ${stats.conference_abstract_failed_count || 0} 篇；预算外待查 ${stats.conference_abstract_enrichment_skipped || 0} 篇；领域／方法预筛后 ${stats.conference_candidate_paper_count || 0} 篇；AI 已评审 ${stats.conference_llm_reviewed_count || 0} 篇；本次收录 ${stats.new_paper_count || 0} 篇。`);
   }
 }
 

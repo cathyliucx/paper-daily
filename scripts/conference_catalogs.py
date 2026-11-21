@@ -115,8 +115,12 @@ def official_catalog(venue: str, year: int) -> list[dict[str, Any]]:
             issues.extend(u for u, label in links(archive, archive_url)
                           if re.search(r'/issue/view/\d+$', u)
                           and re.match(rf'AAAI-{str(year)[-2:]} Technical Tracks\b', label))
-            if issues or f'/archive/{page + 1}' not in archive:
+            years_on_page = [2000 + int(match) for _, label in links(archive, archive_url)
+                             for match in re.findall(r"AAAI-(\d{2}) Technical Tracks", label)]
+            if (years_on_page and min(years_on_page) < year) or f'/archive/{page + 1}' not in archive:
                 break
+        else:
+            raise ValueError(f'AAAI {year} 目录分页尚未读完，不能标为完整目录')
         if not issues:
             raise ValueError(f'AAAI 官方目录尚未找到 {year} 正会 Technical Tracks')
         papers = []
@@ -159,4 +163,4 @@ def official_abstract(paper: dict[str, Any]) -> dict[str, Any] | None:
     return {'title': next(iter(values.get('citation_title', [])), paper['title']),
             'summary': text(summary), 'authors': values.get('citation_author', []),
             'pdf_url': next(iter(values.get('citation_pdf_url', [])), ''),
-            'abstract_source': 'official', 'abstract_source_url': url}
+            'abstract_source': 'official', 'abstract_source_url': url, 'paper_url': url, 'source': 'official'}
