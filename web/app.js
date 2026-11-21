@@ -342,6 +342,7 @@ function bindEvents() {
       hydrateDateFilter();
       updateStats();
       updateUpdatedAt();
+      updateSourceDiagnostics();
       render();
     });
   }
@@ -369,6 +370,29 @@ async function loadOptionalData(path) {
   const response = await fetch(path, { cache: "no-store" });
   if (!response.ok) return { generated_at_iso: new Date().toISOString(), topics: [], papers: [], stats: {} };
   return response.json();
+}
+
+function updateSourceDiagnostics() {
+  const body = document.querySelector("#sourceDiagnosticsBody");
+  if (!body) return;
+  body.replaceChildren();
+  const stats = activeData().stats || {};
+  const addLine = (text) => {
+    const line = document.createElement("p");
+    line.textContent = text;
+    body.appendChild(line);
+  };
+  for (const [name, row] of Object.entries(stats.source_stats || {})) {
+    if (state.filters.collection === "conference" && row.type !== "conference") continue;
+    if (state.filters.collection !== "conference" && row.type === "conference") continue;
+    const failedYears = Object.entries(row.years || {}).filter(([, year]) => year.status === "failed");
+    addLine(`${name}：${row.successful_fetches ? "已读取" : "未取得数据"}${row.raw_paper_count != null ? ` · 目录 ${row.raw_paper_count} 篇` : ""}${row.failed_fetches || failedYears.length ? " · 存在来源故障" : ""}`);
+    if (row.last_error) addLine(row.last_error);
+    for (const [year, detail] of failedYears) addLine(`${year}：${detail.error}`);
+  }
+  if (state.filters.collection === "conference") {
+    addLine(`兴趣线索候选 ${stats.raw_conference_candidate_count || 0} 篇；补摘要成功 ${stats.conference_abstract_enrichment_succeeded || 0} 篇；仍缺摘要 ${stats.conference_missing_abstract_count || 0} 篇；领域／方法预筛后 ${stats.conference_candidate_paper_count || 0} 篇；AI 已评审 ${stats.conference_llm_reviewed_count || 0} 篇；本次收录 ${stats.new_paper_count || 0} 篇。`);
+  }
 }
 
 function updateUpdatedAt(message = "") {
@@ -409,6 +433,7 @@ async function main() {
     data.papers = (data.papers || []).filter(paper => ["high", "medium"].includes(levelOf(paper)));
   }
   updateUpdatedAt();
+  updateSourceDiagnostics();
   hydrateTopicFilter();
   hydrateDateFilter();
   updateStats();

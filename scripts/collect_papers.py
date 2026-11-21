@@ -22,9 +22,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+try:
+    from scripts.conference_catalogs import official_catalog, official_abstract, validate_html
+except ImportError:  # Direct invocation: python scripts/collect_papers.py
+    from conference_catalogs import official_catalog, official_abstract, validate_html
+
 
 ARXIV_API_URL = "https://export.arxiv.org/api/query"
-DBLP_API_URL = os.getenv("DBLP_API_URL", "http://dblp.org/search/publ/api")
+DBLP_API_URL = os.getenv("DBLP_API_URL", "https://dblp.org/search/publ/api")
 OPENALEX_WORKS_URL = "https://api.openalex.org/works"
 CROSSREF_WORKS_URL = "https://api.crossref.org/works"
 SEMANTIC_SCHOLAR_SEARCH_URL = "https://api.semanticscholar.org/graph/v1/paper/search"
@@ -949,7 +954,7 @@ def dblp_html_url_for_toc(toc_key: str) -> str:
         path = path[:-4] + ".html"
     elif not path.endswith(".html"):
         path += ".html"
-    return "http://dblp.org/" + path.lstrip("/")
+    return "https://dblp.org/" + path.lstrip("/")
 
 
 def conference_paper_from_dblp_html_chunk(
@@ -1028,8 +1033,13 @@ def fetch_dblp_html_toc(toc_key: str, source: ConferenceSource, year: int) -> li
         req = urllib.request.Request(url, headers={"User-Agent": "paper-daily-collector/1.0 (+https://github.com/Futuresxy/paper-daily)"})
         try:
             with urllib.request.urlopen(req, timeout=timeout_seconds) as resp:
-                html_text = resp.read().decode("utf-8", "replace")
-            return parse_dblp_html_toc(html_text, source, year, toc_key)
+                if resp.status != 200:
+                    raise ValueError(f"DBLP 返回 HTTP {resp.status}，不是有效目录")
+                html_text = validate_html(resp.read().decode("utf-8", "replace"))
+            parsed = parse_dblp_html_toc(html_text, source, year, toc_key)
+            if not parsed:
+                raise ValueError("DBLP 页面中未找到有效会议题录，不能视为采集成功")
+            return parsed
         except Exception as exc:
             last_error = exc
             if not is_retryable_dblp_error(exc) or attempt == retry_count - 1:
@@ -1066,10 +1076,65 @@ def fetch_dblp_conference(source: ConferenceSource, max_results: int) -> list[di
                     continue
                 papers.extend(fallback_papers[:max_results])
                 continue
-            papers.extend(parse_dblp_hits(data, source, year, toc_key))
+            parsed = parse_dblp_hits(data, source, year, toc_key)
+            if not parsed:
+                errors.append(ValueError(f"DBLP 未索引到 {source.name} {year} 论文"))
+            papers.extend(parsed)
     if not papers and errors:
         raise errors[-1]
     return dedupe_papers(papers)
+
+
+def conference_discovery_score(paper: dict[str, Any], topics: list[Topic]) -> int:
+    title = str(paper.get("title") or "").lower()
+    def hit(term: str) -> bool:
+        return bool(re.search(r"(?<!\w)" + re.escape(term.lower()) + r"(?!\w)", title))
+    method = max((sum(any(hit(term) for term in group) for group in topic.required_keyword_groups)
+                  + 3 * sum(hit(term) for term in topic.keywords) for topic in topics), default=0)
+    domains = {match["id"] for topic in topics for match in application_domain_matches(topic, {"title": title})}
+    return method + 10 * len(domains) if method else 0
+
+
+def fetch_conference_catalog(source: ConferenceSource, topics: list[Topic], max_results: int) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    papers = []
+    diagnostics: dict[str, Any] = {"raw_paper_count": 0, "years": {}}
+    for year in source.years:
+        errors = []
+        try:
+            fetched = official_catalog(source.id, year)
+            if not fetched:
+                raise ValueError("官方目录未返回已录用论文，可能尚未发布")
+            for paper in fetched:
+                paper.setdefault("id", "official:" + paper["paper_url"])
+                paper.update(source=f"{source.name} 官方论文集", source_type="conference",
+                             conference={"id": source.id, "name": source.name, "year": year},
+                             published=f"{year}-01-01T00:00:00+00:00", categories=[source.name, str(year)])
+                if not paper.get("summary"):
+                    paper["summary"] = ""
+                    paper["official_abstract_url"] = paper["paper_url"]
+            catalog_name = "official"
+        except Exception as exc:
+            errors.append(f"官方目录：{exc}")
+            try:
+                one_year = ConferenceSource(source.id, source.name, source.group, source.dblp_toc_patterns, [year])
+                fetched = fetch_dblp_conference(one_year, max_results)
+                if not fetched:
+                    raise ValueError("未取得有效题录")
+                catalog_name = "dblp"
+            except Exception as fallback_exc:
+                errors.append(f"DBLP：{fallback_exc}")
+                diagnostics["years"][str(year)] = {"status": "failed", "error": "；".join(errors)}
+                continue
+        diagnostics["raw_paper_count"] += len(fetched)
+        diagnostics["years"][str(year)] = {"status": "ok", "catalog": catalog_name, "raw_paper_count": len(fetched), "warnings": errors}
+        papers.extend(fetched)
+    if not papers:
+        raise ValueError("；".join(f"{y}: {row.get('error', '')}" for y, row in diagnostics["years"].items()))
+    # Rank the complete official catalog before applying the expensive abstract budget.
+    papers = [paper for paper in dedupe_papers(papers) if conference_discovery_score(paper, topics)]
+    papers.sort(key=lambda p: conference_discovery_score(p, topics), reverse=True)
+    diagnostics["discovery_candidate_count"] = len(papers)
+    return papers[:max_results] if max_results > 0 else papers, diagnostics
 
 
 def openalex_abstract_text(work: dict[str, Any]) -> str:
@@ -1477,6 +1542,7 @@ def score_paper(topic: Topic, paper: dict[str, Any]) -> dict[str, Any]:
         "level": match_level(base_score),
         "reason": "；".join(reason_parts),
         "keyword_hits": hits,
+        "required_groups_met": True if topic.required_keyword_groups else None,
     }
 
 
@@ -1507,7 +1573,7 @@ def has_meaningful_summary(paper: dict[str, Any], min_chars: int = 80) -> bool:
 def is_relevant_enough(paper: dict[str, Any], best_match: dict[str, Any]) -> bool:
     if best_match.get("required_groups_met") is False:
         return False
-    if best_match.get("keyword_hits"):
+    if best_match.get("keyword_hits") or (best_match.get("required_groups_met") is True and has_meaningful_summary(paper)):
         return True
 
     score = float(best_match.get("score") or 0.0)
@@ -1559,7 +1625,14 @@ def enrich_conference_papers_from_arxiv(papers: list[dict[str, Any]]) -> dict[st
         stats["conference_abstract_enrichment_attempted"] += 1
         if arxiv_enrichment_enabled:
             stats["conference_arxiv_enrichment_attempted"] += 1
-        candidate = find_conference_abstract_by_title(title, max_results=search_results)
+        candidate = None
+        if paper.get("official_abstract_url"):
+            try:
+                candidate = official_abstract(paper)
+            except Exception as exc:
+                paper["abstract_error"] = str(exc)
+        if not candidate:
+            candidate = find_conference_abstract_by_title(title, max_results=search_results)
         if candidate and enrich_conference_paper_from_candidate(paper, candidate):
             stats["conference_abstract_enrichment_succeeded"] += 1
             if str(paper.get("abstract_source") or "").lower() == "arxiv":
@@ -2080,7 +2153,7 @@ def collect(
     max_per_conference = int(os.getenv("MAX_PER_CONFERENCE", "1000"))
     conference_delay_seconds = float(os.getenv("DBLP_DELAY_SECONDS", "5"))
     for index, source in enumerate(conference_sources):
-        years_to_fetch = uncached_conference_years(source, cached_conference_years_by_source)
+        years_to_fetch = list(source.years)
         skipped_cached_conference_years += len(source.years) - len(years_to_fetch)
         source_stats[source.name] = {
             "type": "conference",
@@ -2103,7 +2176,8 @@ def collect(
         )
         print(f"Fetching DBLP conference papers for source: {source.name} {', '.join(str(year) for year in years_to_fetch)}", flush=True)
         try:
-            source_papers = fetch_dblp_conference(source_to_fetch, max_per_conference)
+            source_papers, diagnostics = fetch_conference_catalog(source_to_fetch, topics, max_per_conference)
+            source_stats[source.name].update(diagnostics)
             all_candidates.extend(source_papers)
             successful_fetches += 1
             successful_conference_fetches += 1
@@ -2128,6 +2202,12 @@ def collect(
     if successful_fetches == 0 and failed_fetches > 0 and (existing_payload.get("papers") or existing_conference_payload.get("papers")):
         print("All configured sources failed; preserving existing paper data.", file=sys.stderr)
 
+    # Discovery only uses broad title clues. Strict concept/domain gates require the abstract.
+    conference_discovery = [p for p in dedupe_papers(all_candidates) if p.get("source_type") == "conference"]
+    conference_discovery.sort(key=lambda p: conference_discovery_score(p, topics), reverse=True)
+    conference_enrichment_stats = enrich_conference_papers_from_arxiv(conference_discovery)
+    enriched_by_key = {paper_key(p): p for p in conference_discovery}
+    all_candidates = [enriched_by_key.get(paper_key(p), p) for p in all_candidates]
     recent_papers = []
     daily_backfill_candidates = []
     filtered_low_relevance = 0
@@ -2151,8 +2231,11 @@ def collect(
                 daily_outside_cutoff_count += 1
             continue
 
+        if is_conference_paper and not has_meaningful_summary(paper):
+            filtered_low_relevance += 1
+            continue
         matches = [score_paper(topic, paper) for topic in topics]
-        matches.sort(key=lambda item: item["score"], reverse=True)
+        matches.sort(key=lambda item: (item.get("required_groups_met") is not False, item["score"]), reverse=True)
         best_match = matches[0]
         if not is_relevant_enough(paper, best_match):
             filtered_low_relevance += 1
@@ -2193,14 +2276,6 @@ def collect(
         daily_recent_papers = daily_recent_papers[:max_new_papers]
     if max_new_conference_papers > 0:
         conference_recent_papers = conference_recent_papers[:max_new_conference_papers]
-    conference_enrichment_stats = enrich_conference_papers_from_arxiv(conference_recent_papers)
-    if conference_enrichment_stats["conference_arxiv_enrichment_succeeded"]:
-        for paper in conference_recent_papers:
-            matches = [score_paper(topic, paper) for topic in topics]
-            matches.sort(key=lambda item: item["score"], reverse=True)
-            paper["matches"] = matches
-            paper["best_match"] = matches[0]
-        conference_recent_papers.sort(key=lambda p: (p["best_match"]["score"], p.get("published", "")), reverse=True)
     recent_papers = sorted(
         [*daily_recent_papers, *conference_recent_papers],
         key=lambda p: (p["best_match"]["score"], paper_activity_datetime(p)),
@@ -2262,6 +2337,9 @@ def collect(
         "daily_candidate_paper_count": daily_candidate_paper_count,
         "conference_candidate_paper_count": conference_candidate_paper_count,
         "raw_daily_candidate_count": raw_daily_candidate_count,
+        "raw_conference_candidate_count": len(conference_discovery),
+        "conference_missing_abstract_count": sum(not has_meaningful_summary(p) for p in conference_discovery),
+        "conference_filtered_count": len(conference_discovery) - conference_candidate_paper_count,
         "daily_outside_cutoff_count": daily_outside_cutoff_count,
         "daily_backfill_days": backfill_days,
         "daily_backfill_candidate_count": len(daily_backfill_candidates),
@@ -2277,6 +2355,9 @@ def collect(
         "sources": [source.__dict__ for source in sources],
         "conference_sources": [source.__dict__ for source in conference_sources],
         "source_stats": source_stats,
+        "llm_reviewed_count": len(summaries_by_id),
+        "conference_llm_reviewed_count": sum(str(p.get("id", "")) in summaries_by_id for p in conference_recent_papers),
+        "conference_ai_rejected_count": sum(best_match_level(p) not in RETAINED_MATCH_LEVELS for p in conference_recent_papers),
         "llm_enabled": llm_enabled(),
         "llm_concurrency": int(os.getenv("LLM_CONCURRENCY", "2")),
         "recent_history_days": recent_history_days,
