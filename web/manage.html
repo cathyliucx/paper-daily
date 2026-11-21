@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>设置说明 · Paper Daily</title>
+    <link rel="stylesheet" href="./styles.css?v=20261121-native-management" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">PD</span><h1>Paper Daily</h1></div>
+      <a class="settings-button" href="./index.html">返回论文</a>
+    </header>
+    <main class="management-shell">
+      <h2>使用 GitHub 账号管理，无需令牌</h2>
+      <p>本站只展示论文。管理操作交给 GitHub 自己的登录和权限校验，页面刷新后不会再要求填写授权令牌。</p>
+      <section id="interests">
+        <h2>研究兴趣</h2>
+        <p>在 GitHub 编辑 <code>config/interests.json</code> 中的 <code>topics</code>：名称和描述可用中文，<code>keywords</code> 使用英文。需要严格区分概念时，保留 <code>required_keyword_groups</code>；组内为“或”，组间为“且”。</p>
+        <p>新增兴趣时在列表中添加一个对象；保留已有来源和其他兴趣。点击 GitHub 的 <strong>Commit changes</strong> 保存后，会自动运行采集并更新网页。</p>
+        <a class="settings-button" href="https://github.com/cathyliucx/paper-daily/edit/main/config/interests.json" target="_blank" rel="noopener noreferrer">在 GitHub 编辑研究兴趣 ↗</a>
+      </section>
+      <section id="model">
+        <h2>模型密钥配置一次，采集自动使用</h2>
+        <p>模型 API 密钥保存在 GitHub Actions Secrets，日常查看论文、运行采集都不需要重新输入。已有密钥可以继续保留；只有失效、轮换或更换服务商时才需要更新。</p>
+        <p>DeepSeek 首次配置：在 Secrets 新建 <code>DEEPSEEK_API_KEY</code>，填入 DeepSeek 的 API 密钥并保存。默认接口和模型已经支持，不必反复填写。</p>
+        <p class="hint">如果已经配置过模型密钥，请保留现有设置，不必再次新增。密钥不会写入网页或公开源码，GitHub 也不会回显。</p>
+        <details>
+          <summary>其他服务商、旧版配置与自定义模型</summary>
+          <p>已有 <code>LLM_API_KEY</code> 完整模型配置继续生效，优先使用其中的接口和模型。普通 API key 也受支持，可搭配 Variables：<code>LLM_BASE_URL</code> 指定基础地址，<code>LLM_MODEL</code> 指定模型 ID。</p>
+          <p>DeepSeek 默认地址为 <code>https://api.deepseek.com/v1</code>，默认模型为 <code>deepseek-chat</code>。只使用默认设置时不需要额外填写变量。以后主动更换服务商时再更新密钥与对应配置。</p>
+        </details>
+        <a class="settings-button" href="https://github.com/cathyliucx/paper-daily/settings/secrets/actions" target="_blank" rel="noopener noreferrer">管理模型密钥（Secrets）↗</a>
+        <a class="settings-button" href="https://github.com/cathyliucx/paper-daily/settings/variables/actions" target="_blank" rel="noopener noreferrer">管理接口与模型（Variables）↗</a>
+      </section>
+      <section id="collection">
+        <h2>更新论文与清理缓存</h2>
+        <ol>
+          <li>打开下方 Paper Daily 工作流，点击 <strong>Run workflow</strong>。</li>
+          <li>普通更新保持 <code>clear_cache = false</code>；重建历史论文列表时填 <code>clear_cache = true</code>。</li>
+          <li><code>lookback_days</code> 填写检索天数，例如 <code>7</code>。再点击绿色的 <strong>Run workflow</strong> 确认。</li>
+          <li>等待任务成功发布后，刷新论文页。任务失败时在 GitHub 查看日志。</li>
+        </ol>
+        <p class="hint">清理缓存会重新生成论文列表，研究兴趣和模型密钥不会被删除。仅打开入口不会启动采集。现有每日自动采集继续运行。</p>
+        <a class="settings-button" href="https://github.com/cathyliucx/paper-daily/actions/workflows/paper-daily.yml" target="_blank" rel="noopener noreferrer">在 GitHub 更新 / 清理缓存 ↗</a>
+      </section>
+    </main>
+  </body>
+</html>

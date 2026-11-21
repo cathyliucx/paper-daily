@@ -55,35 +55,27 @@ https://你的用户名.github.io/你的仓库名/
 https://Futuresxy.github.io/paper-daily/
 ```
 
-## 在页面添加研究兴趣和清理缓存
+## 使用 GitHub 原生页面管理（不需要 PAT）
 
-打开 [Paper Daily](https://cathyliucx.github.io/paper-daily/)，页面顶部有「研究兴趣」和「清理缓存」两个按钮。
+[Paper Daily](https://cathyliucx.github.io/paper-daily/) 继续托管在你的个人 GitHub Pages。网站不再要求输入或保存 GitHub 令牌、模型密钥。所有管理操作打开 GitHub 原生页面，由 GitHub 账号登录和仓库权限处理；普通读者只浏览公开论文。
 
-GitHub Pages 是静态网站，仓库写入和触发 Actions 需要你自己的 GitHub 授权：
+| 网站入口 | GitHub 中的操作 |
+| --- | --- |
+| 研究兴趣 | 编辑 `config/interests.json`，在 `topics` 中新增或修改名称、描述和英文关键词；保留必要概念组及已有来源。Commit changes 后自动采集发布。 |
+| 模型配置 | 在 Actions Secrets 保存模型密钥；接口和模型 ID 在 Actions Variables 设置。 |
+| 更新 / 清理缓存 | 打开 Paper Daily workflow → Run workflow。普通更新使用 `clear_cache=false`，重建历史列表明确填 `clear_cache=true`；`lookback_days` 指定回看天数。 |
 
-1. 在 GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens 创建一个令牌，仅选择 `cathyliucx/paper-daily` 仓库。
-2. Repository permissions 中将 **Contents**、**Actions**、**Secrets**、**Variables** 设为 **Read and write**，Metadata 保持 Read-only。令牌仅选择本仓库，有效期建议30天。
-3. 在页面设置中粘贴令牌，点击「连接仓库」。令牌只在当前页面内存中保存，刷新或断开连接后清除，不写入浏览器存储或仓库。不要发送到聊天中。
+页面上的「设置说明」提供直接入口和步骤。仅打开管理链接不会修改仓库或触发采集；GitHub 可能在敏感设置变更时要求账号安全确认，但无需再向本站提供 PAT。
 
-**添加兴趣：** 在「研究兴趣」填写名称、长段研究描述和英文关键词（逗号或换行分隔）。可选的「必要概念组」每行一组，组内为“或”、组间为“且”，用于避免概念混淆。最多10个兴趣。点击「保存兴趣并更新论文」会追加到 `config/interests.json`，保留原有兴趣与来源，并启动最近7天的采集。页面会检查重复名称及并发编辑。如果兴趣已保存但任务提交失败，会明确提示，并可单独重试采集，不重复添加兴趣。
+### 模型密钥只配置一次
 
-**清理缓存：** 在「清理缓存」确认后点击「清理缓存并重新采集」，使用已有 workflow 的 `clear_cache=true` 重建最近7天的每日论文和顶会列表。这是忽略旧论文数据重新生成，不会删除兴趣或模型密钥，也不会删除全部 GitHub Actions 缓存条目。完成发布前，旧页面数据保持可见。
+DeepSeek 首次使用只需在 GitHub Actions Secrets 保存 `DEEPSEEK_API_KEY`，默认接口和模型已支持。后续采集自动读取，不需要每天或每次刷新重新填写模型密钥。已有 `LLM_API_KEY` / `OPENAI_API_KEY` 也继续支持；已有配置无需再新增密钥。其他兼容服务可使用 `LLM_API_KEY` 并在 Variables 设置 `LLM_BASE_URL`、`LLM_MODEL`。
 
-页面会显示排队、运行中、成功或失败，并链接到对应任务。任务成功后点击「刷新论文」读取新数据。状态检查遇到网络错误或超过15分钟会暂停，可点击「继续检查任务」；不能把任务已提交当作发布成功。刷新页面后可到「查看任务记录」继续查看，已经提交的任务不会被取消。无需令牌也可以正常浏览论文。
+旧版网页已经保存的完整模型配置（版本化 JSON，位于 `LLM_API_KEY` Secret）仍然有效，无需重复配置，它优先于旧的接口/模型变量。以后主动更换接口或模型时，可将该 Secret 更新为服务商 API key 本身，并同步设置两个变量。GitHub 不会回显已保存密钥，网站和公开数据也不含密钥。
 
-仍可使用 GitHub Actions 的 `Run workflow` 手动运行（`clear_cache=true` 清缓存）。网页配置对应仓库文件；若启用了旧式 `Research Interests` Issue 配置，请先关闭该配置 Issue，避免覆盖文件中的兴趣。本仓库目前关闭了 Issues。
+### 清理缓存的范围
 
-## 页面上的模型配置
-
-点击顶部「模型配置」，连接 GitHub 授权后填写服务商、HTTPS 基础地址、模型 ID 和模型 API 密钥。默认提供 DeepSeek，也支持自定义 OpenAI 兼容接口。点击「保存模型配置」后，下次采集使用新配置；保存本身不会调用收费模型，也不会自动采集或清缓存。页面显示「已保存」和「已配置」，不会把它们误报成「模型连接成功」。
-
-模型接口、模型 ID 和密钥在浏览器中使用官方 libsodium 密封加密，作为一个版本化 JSON 配置写入 `LLM_API_KEY` Actions Secret。整个运行配置一次保存，避免部分更新时把旧密钥发送到新地址。已有纯文本 `LLM_API_KEY`、`DEEPSEEK_API_KEY`、`OPENAI_API_KEY` 仍兼容；版本化配置优先于旧的 `LLM_BASE_URL` / `LLM_MODEL` 变量。`LLM_PROFILE` Actions 变量仅记录不含密钥的显示信息，写入失败会单独报告，不影响已经保存的运行配置。
-
-GitHub 不会返回已保存密钥的内容，页面不会回显。修改模型配置时须重新输入模型密钥，留空不会覆盖。浏览器不保存 GitHub 令牌或模型密钥，关闭配置窗口会清空未提交的模型密钥输入；刷新或断开会清除 GitHub 连接。
-
-**分享权限：** 分享网站链接不会携带 GitHub 令牌，访客不能凭链接改写仓库或查看模型密钥。不要分享管理令牌或已连接的浏览器会话。拿到管理令牌的人可使用它获准的仓库权限；能修改代码的人还可能通过代码滥用模型密钥，因此不能把管理权限当作普通浏览权限分享。
-
-GitHub 授权入口会预填账户、30天有效期和所需权限。创建时仍须将 Repository access 设为 Only select repositories，仅选 `paper-daily`。最终生成授权令牌由账号所有者在 GitHub 确认，不要把令牌粘贴到聊天中，也不要提交到代码库。
+`clear_cache=true` 会忽略历史论文数据并重新生成每日和顶会论文列表，不会删除研究兴趣或模型密钥，也不会删除全部 GitHub Actions 缓存条目。任务完成发布前旧网页保持可见；失败时在 GitHub 日志检查，不能把提交任务当成发布成功。
 
 ## 数据保存方式
 
@@ -93,7 +85,7 @@ GitHub Actions 运行后不会再把 `web/data/*.json` commit 回 `main` 分支�
 
 ## 第 3 步：配置研究方向
 
-推荐使用上面的页面入口添加兴趣。需要批量修改时可直接编辑 `config/interests.json`。以下为仍兼容的旧式 Issue 配置方式（需仓库启用 Issues）：
+推荐点击网站的「研究兴趣」直接打开 GitHub 文件编辑器，编辑 `config/interests.json` 并提交。以下为仍兼容的旧式 Issue 配置方式（需仓库启用 Issues；本仓库保持关闭）：
 
 1. 打开仓库的 `Issues`。
 2. 点击 `New issue`。
@@ -445,7 +437,7 @@ Settings -> Secrets and variables -> Actions -> Variables -> New repository vari
 | Name | 示例 |
 | --- | --- |
 | `LLM_BASE_URL` | `https://api.deepseek.com/v1` |
-| `LLM_MODEL` | `deepseek-v4-pro` |
+| `LLM_MODEL` | `deepseek-chat` |
 
 只用 DeepSeek 或 OpenAI 的默认地址时，可以不填这两个变量。
 
