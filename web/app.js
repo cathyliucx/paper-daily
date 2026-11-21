@@ -1,5 +1,5 @@
 const THEME_STORAGE_KEY = "paper-daily-theme";
-const THEMES = new Set(["dark", "light", "eye"]);
+const THEMES = new Set(["dark", "light"]);
 
 const state = {
   datasets: {

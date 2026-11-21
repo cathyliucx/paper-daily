@@ -12,3 +12,6 @@ Replace the token-admin dialog with three native GitHub navigation links and a s
 
 ## Verification
 Run Python collector and management tests, `node --check web/app.js`, and `git diff --check`. Validate native GitHub URLs and the published token-free page in the browser without saving native settings or exposing secrets. Tests guard against reintroducing password fields, PAT API clients or runtime authenticated GitHub requests in the public website.
+
+## Responsive filters and theme cleanup (2026-11-21)
+The desktop toolbar placed two tab groups and a four-field grid on a single row. Intrinsic column minimums made the search input extend past the panel (reproduced at 1280px: input right 1263px, panel right 1229px). Put both tab groups above a full-width filter row, use shrinkable tracks, and constrain inputs/selects. Retain two-column tablet and single-column phone layouts; verify panel containment at desktop, tablet and phone widths and with a long interest selected. The owner also requested removal of eye mode: remove its selector and styles, keep only dark/light, and map a saved eye preference through the existing invalid-theme fallback to dark. Verify migrated storage is rewritten to dark without accessing any credentials.

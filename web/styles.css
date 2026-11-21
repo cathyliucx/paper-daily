@@ -71,41 +71,6 @@ body[data-theme="light"] {
   --shadow: 0 18px 45px rgba(15, 23, 42, 0.1);
 }
 
-body[data-theme="eye"] {
-  color-scheme: light;
-  --bg: #eef7ed;
-  --bg-glow-primary: rgba(22, 163, 74, 0.14);
-  --bg-glow-secondary: rgba(217, 119, 6, 0.08);
-  --surface: #fbfff7;
-  --surface-2: #e7f2df;
-  --surface-3: #d8e8cf;
-  --text: #1f3324;
-  --muted: #64735f;
-  --line: rgba(45, 82, 50, 0.17);
-  --topbar-bg: rgba(251, 255, 247, 0.9);
-  --button-bg: rgba(48, 98, 65, 0.07);
-  --control-bg: #fcfff7;
-  --overview-bg:
-    linear-gradient(135deg, rgba(101, 163, 13, 0.16), transparent 42%),
-    linear-gradient(315deg, rgba(15, 118, 110, 0.11), rgba(251, 255, 247, 0.96));
-  --metric-bg: rgba(251, 255, 247, 0.92);
-  --metric-accent-bg: linear-gradient(145deg, rgba(234, 88, 12, 0.1), rgba(251, 255, 245, 0.96));
-  --panel-bg: rgba(251, 255, 245, 0.92);
-  --card-bg: rgba(252, 255, 247, 0.96);
-  --card-footer-bg: rgba(48, 98, 65, 0.05);
-  --empty-bg: rgba(252, 255, 247, 0.76);
-  --summary-text: #2d3e33;
-  --tag-bg: rgba(101, 163, 13, 0.1);
-  --tag-line: rgba(101, 163, 13, 0.28);
-  --tag-text: #4d7c0f;
-  --download-text: #9f3f32;
-  --teal: #0f766e;
-  --coral: #c85543;
-  --gold: #96721c;
-  --green: #2f8f46;
-  --low: #77836f;
-  --shadow: 0 18px 45px rgba(47, 82, 55, 0.12);
-}
 
 * {
   box-sizing: border-box;
@@ -230,9 +195,7 @@ a {
   background: linear-gradient(135deg, #ffffff 50%, #2563eb 50%);
 }
 
-.eye-swatch {
-  background: linear-gradient(135deg, #eef7ed 50%, #65a30d 50%);
-}
+
 
 .icon-link {
   display: inline-grid;
@@ -324,7 +287,8 @@ a {
 
 .toolbar {
   display: grid;
-  grid-template-columns: auto auto minmax(0, 1fr);
+  grid-template-columns: auto minmax(0, 1fr);
+  min-width: 0;
   gap: 14px;
   align-items: end;
   border: 1px solid var(--line);
@@ -336,6 +300,7 @@ a {
 
 .collection-tabs,
 .tabs {
+  min-width: 0;
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -373,7 +338,9 @@ a {
 
 .filters {
   display: grid;
-  grid-template-columns: minmax(130px, 0.7fr) minmax(160px, 1fr) minmax(120px, 0.6fr) minmax(220px, 1.4fr);
+  grid-column: 1 / -1;
+  min-width: 0;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.3fr) minmax(0, 0.7fr) minmax(0, 1.4fr);
   gap: 10px;
 }
 
@@ -391,6 +358,8 @@ a {
 input,
 select {
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   min-height: 38px;
   border: 1px solid var(--line);
   border-radius: 8px;
